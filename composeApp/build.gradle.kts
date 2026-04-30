@@ -22,6 +22,8 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.sshj)
+            implementation(libs.bouncycastle)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -32,6 +34,19 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.serialization.json)
+
+             implementation(libs.koin.core)
+
+            // Voyager
+            implementation(libs.voyager.navigator)
+            implementation(libs.voyager.screenmodel)
+            implementation(libs.voyager.tab.navigator)
+            // Transitions
+            implementation(libs.cafe.voyager.transitions)
+            // Koin integration
+            implementation(libs.voyager.koin)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -39,6 +54,8 @@ kotlin {
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
+            implementation(libs.sshj)
+            implementation(libs.bouncycastle)
         }
     }
 }
