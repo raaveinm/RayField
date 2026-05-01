@@ -1,6 +1,6 @@
 package com.raaveinm.rayfield.domain
 
-import com.raaveinm.rayfield.data.CommandResult
+import com.raaveinm.rayfield.data.xray.types.CommandResult
 
 //
 // Created by Kirill "Raaveinm" on 4/29/26.
