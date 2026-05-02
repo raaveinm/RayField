@@ -1,4 +1,4 @@
-@file:Suppress("ClassName")
+@file:Suppress("ClassName", "unused")
 package com.raaveinm.rayfield.data.xray
 
 import kotlinx.serialization.SerialName
@@ -85,5 +85,42 @@ object Configurations {
         @SerialName("random") RANDOM,
         @SerialName("randomized") RANDOMIZED,
         @SerialName("unsafe") UNSAFE
+    }
+
+    @Serializable
+    enum class encryption {
+        @SerialName("none") NONE,
+        @SerialName("auto") AUTO,
+        @SerialName("aes-128-gcm") AES_128_GCM,
+        @SerialName("aes-256-gcm") AES_256_GCM,
+        @SerialName("chacha20-poly1305") CHACHA20_POLY1305,
+        @SerialName("zero") ZERO
+    }
+
+    @Serializable
+    enum class decryption {
+        @SerialName("none") NONE
+    }
+
+    @Serializable
+    enum class shadowsocksMethod {
+        @SerialName("aes-128-gcm") AES_128_GCM,
+        @SerialName("aes-256-gcm") AES_256_GCM,
+        @SerialName("chacha20-poly1305") CHACHA20_POLY1305,
+        @SerialName("2022-blake3-aes-128-gcm") BLAKE3_AES_128_GCM,
+        @SerialName("2022-blake3-aes-256-gcm") BLAKE3_AES_256_GCM,
+        @SerialName("2022-blake3-chacha20-poly1305") BLAKE3_CHACHA20_POLY1305
+    }
+
+    @Serializable
+    enum class flow {
+        @SerialName("xtls-rprx-vision") XTLS_RPRX_VISION,
+        @SerialName("xtls-rprx-vision-udp443") XTLS_RPRX_VISION_UDP443
+    }
+
+    @Serializable
+    enum class ruleType {
+        @SerialName("field") FIELD,
+        @SerialName("logical") LOGICAL
     }
 }

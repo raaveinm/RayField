@@ -1,22 +1,34 @@
 package com.raaveinm.rayfield
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import com.raaveinm.rayfield.domain.SshClientJvm
+import com.raaveinm.rayfield.ui.theme.RayFieldTheme
 
 fun main() = application {
-    val state = rememberWindowState(width = 500.dp, height = 800.dp)
+    val state = rememberWindowState(width = 1239.dp, height = 915.dp)
 
     Window(
         onCloseRequest = ::exitApplication,
         title = "RayField",
-        state = state
+        state = state,
+        undecorated = true,
+        transparent = false
     ) {
 
-        val client = SshClientJvm()
-
-        App(client)
+//        val client = SshClientJvm()
+        RayFieldTheme {
+            Column {
+                RayFieldTitleBar(
+                    onClose = ::exitApplication,
+                    onMinimize = { state.isMinimized = true }
+                )
+                App(Modifier.fillMaxSize())
+            }
+        }
     }
 }

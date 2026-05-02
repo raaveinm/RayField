@@ -1,6 +1,7 @@
 package com.raaveinm.rayfield.domain
 
 import com.raaveinm.rayfield.data.xray.types.XrayKeyPair
+import com.raaveinm.rayfield.domain.xray.CypherService
 import org.bouncycastle.crypto.generators.X25519KeyPairGenerator
 import org.bouncycastle.crypto.params.X25519KeyGenerationParameters
 import org.bouncycastle.crypto.params.X25519PrivateKeyParameters

@@ -1,4 +1,4 @@
-package com.raaveinm.rayfield.domain
+package com.raaveinm.rayfield.domain.xray
 
 import com.raaveinm.rayfield.data.xray.types.XrayKeyPair
 

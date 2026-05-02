@@ -1,5 +1,6 @@
 @file:Suppress("unused")
-package com.raaveinm.rayfield.domain
+
+package com.raaveinm.rayfield.domain.xray
 
 import com.raaveinm.rayfield.data.xray.Configurations
 import com.raaveinm.rayfield.data.xray.XrayConfig
@@ -9,6 +10,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 object XrayConfigBuilder {
 
@@ -32,9 +34,9 @@ object XrayConfigBuilder {
     fun vlessInboundSettings(
         uuid: String,
         email: String? = null,
-        flow: String? = null,
+        flow: Configurations.flow? = null,
         level: Int? = null,
-        decryption: String = "none",
+        decryption: Configurations.decryption = Configurations.decryption.NONE,
         fallbacks: List<XrayConfig.Fallback>? = null
     ): JsonObject {
         val settings = XrayConfig.VlessInboundSettings(
@@ -82,8 +84,8 @@ object XrayConfigBuilder {
         address: String,
         port: Int,
         uuid: String,
-        encryption: String = "none",
-        flow: String? = null,
+        encryption: Configurations.encryption = Configurations.encryption.NONE,
+        flow: Configurations.flow? = null,
         level: Int? = null
     ): JsonObject {
         val settings = XrayConfig.VlessOutboundSettings(
@@ -117,6 +119,63 @@ object XrayConfigBuilder {
                     level = level
                 )
             )
+        )
+        return toSettings(settings)
+    }
+
+    fun defaultRoutingConfig(
+        blockAds: Boolean = true,
+        blockMalicious: Boolean = true,
+        directPrivateIps: Boolean = true
+    ): XrayConfig.RoutingConfig {
+        val rules = mutableListOf<XrayConfig.RoutingRule>()
+
+        if (blockAds) {
+            rules.add(
+                XrayConfig.RoutingRule(
+                    type = Configurations.ruleType.FIELD,
+                    domain = listOf("geosite:category-ads-all"),
+                    outboundTag = "block"
+                )
+            )
+        }
+
+        if (blockMalicious) {
+            rules.add(
+                XrayConfig.RoutingRule(
+                    type = Configurations.ruleType.FIELD,
+                    domain = listOf("geosite:malware", "geosite:phishing"),
+                    outboundTag = "block"
+                )
+            )
+        }
+
+        if (directPrivateIps) {
+            rules.add(
+                XrayConfig.RoutingRule(
+                    type = Configurations.ruleType.FIELD,
+                    ip = listOf("geoip:private"),
+                    outboundTag = "direct"
+                )
+            )
+        }
+
+        return XrayConfig.RoutingConfig(
+            domainStrategy = Configurations.domainStrategy.IP_IF_NON_MATCH,
+            domainMatcher = "mph",
+            rules = rules
+        )
+    }
+
+    fun shadowsocksInboundSettings(
+        method: Configurations.shadowsocksMethod = Configurations.shadowsocksMethod.AES_256_GCM,
+        password: String,
+        network: String? = null
+    ): JsonObject {
+        val settings = XrayConfig.ShadowsocksInboundSettings(
+            method = jsonFormatter.encodeToJsonElement(method).jsonPrimitive.content,
+            password = password,
+            network = network
         )
         return toSettings(settings)
     }

@@ -47,7 +47,7 @@ data class XrayConfig(
 
     @Serializable
     data class RoutingRule(
-        val type: String? = null,
+        val type: Configurations.ruleType? = null,
         val inboundTag: List<String>? = null,
         val outboundTag: String? = null,
         val balancerTag: String? = null,
@@ -204,14 +204,14 @@ data class XrayConfig(
     @Serializable
     data class VlessInboundSettings(
         val clients: List<VlessUser>,
-        val decryption: String = "none",
+        val decryption: Configurations.decryption = Configurations.decryption.NONE,
         val fallbacks: List<Fallback>? = null
     )
 
     @Serializable
     data class VlessUser(
         val id: String,
-        val flow: String? = null,
+        val flow: Configurations.flow? = null,
         val email: String? = null,
         val level: Int? = null
     )
@@ -251,8 +251,8 @@ data class XrayConfig(
     @Serializable
     data class VlessOutboundUser(
         val id: String,
-        val encryption: String = "none",
-        val flow: String? = null,
+        val encryption: Configurations.encryption = Configurations.encryption.NONE,
+        val flow: Configurations.flow? = null,
         val level: Int? = null
     )
 
