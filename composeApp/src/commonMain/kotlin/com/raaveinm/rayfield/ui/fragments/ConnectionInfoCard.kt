@@ -1,8 +1,8 @@
 package com.raaveinm.rayfield.ui.fragments
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,11 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
@@ -49,9 +46,10 @@ import com.raaveinm.rayfield.data.xray.types.ServerState
 import com.raaveinm.rayfield.ui.theme.LocalDimensions
 
 @Composable
-fun ServerCard(
+fun ConnectionInfoCard(
     modifier: Modifier = Modifier,
     serverState: ServerState,
+    onCopyClick: (text: String) -> Unit = {},
     onQrClick: () -> Unit = {},
     onShareClick: () -> Unit = {},
     onEditClick: () -> Unit = {}
@@ -174,7 +172,12 @@ fun ServerCard(
                         text = serverState.sharedLink,
                         style = MaterialTheme.typography.labelSmall,
                         color = onContainerColor,
-                        modifier = Modifier.weight(1f).padding(end = dimensions.smallPadding),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = dimensions.smallPadding)
+                            .clickable(true) {
+                                onCopyClick(serverState.sharedLink+"#${displayName}")
+                            },
                         softWrap = true,
                         maxLines = 3
                     )
@@ -228,13 +231,14 @@ private fun ActionButton(
     }
 }
 
-@Preview(showBackground = true)
+@Preview
 @Composable
 fun ServerCardPreview() {
     MaterialTheme {
         Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            ServerCard(
+            ConnectionInfoCard(
                 serverState = ServerState(
+                    serverId = "1",
                     serverName = "Frankfurt Production",
                     serverAddress = "192.168.123.123:443",
                     sharedLink = "vless://fff73709-bide-120b-a853-2b9s3feas2rr@192.168.123.123:443?type=tcp&encryption=none#frankfut",
@@ -242,12 +246,14 @@ fun ServerCardPreview() {
                 )
             )
 
-            ServerCard(
+            ConnectionInfoCard(
                 serverState = ServerState(
+                    serverId = "1",
                     serverName = null,
                     serverAddress = "lon.rayfield.net:8080",
                     sharedLink = "trojan://password@lon.rayfield.net:8080?security=tls&sni=lon.rayfield.net#London_TLS",
-                    protocol = "trojan"
+                    protocol = "trojan",
+
                 ),
             )
         }

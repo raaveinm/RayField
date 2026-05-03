@@ -15,60 +15,79 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.window.WindowDraggableArea
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Minimize
+import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.material.icons.filled.FullscreenExit
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.RoundedCorner
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowScope
+import com.raaveinm.rayfield.domain.helpers.PlatformIdentity
 
 @Composable
 fun WindowScope.RayFieldTitleBar(
     onClose: () -> Unit,
-    onMinimize: () -> Unit
+    onMaximize: () -> Unit,
+    onMinimize: () -> Unit,
+    isMaximized: Boolean = false,
+    platform: PlatformIdentity.Platforms = PlatformIdentity().currentPlatform
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(24.dp)
-            .clip(RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp))
-            .background(MaterialTheme.colorScheme.surface),
-        verticalAlignment = Alignment.CenterVertically
+    CompositionLocalProvider(LocalLayoutDirection provides
+        if (PlatformIdentity.Platforms.MacOS == platform) LayoutDirection.Rtl
+        else LayoutDirection.Ltr
     ) {
-        WindowDraggableArea(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxSize()
-                .padding(start = 16.dp),
-        )
-
         Row(
-            modifier = Modifier.fillMaxHeight(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.End
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(24.dp)
+                .background(MaterialTheme.colorScheme.surface),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            TitleBarButton(
-                icon = Icons.Default.Minimize,
-                onClick = onMinimize,
-                hoverColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+            WindowDraggableArea(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxSize()
+                    .padding(start = 16.dp),
             )
 
-            TitleBarButton(
-                icon = Icons.Default.Close,
-                onClick = onClose,
-                hoverColor = MaterialTheme.colorScheme.errorContainer
-            )
+            Row(
+                modifier = Modifier.fillMaxHeight(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
+            ) {
+                TitleBarButton(
+                    icon = Icons.Default.Remove,
+                    onClick = onMinimize,
+                    hoverColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                )
+
+                TitleBarButton(
+                    icon = if (isMaximized) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
+                    onClick = onMaximize,
+                    hoverColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                )
+
+                TitleBarButton(
+                    icon = Icons.Default.Close,
+                    onClick = onClose,
+                    hoverColor = MaterialTheme.colorScheme.errorContainer
+                )
+            }
         }
     }
 }

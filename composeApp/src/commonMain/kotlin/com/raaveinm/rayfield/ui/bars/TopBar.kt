@@ -75,7 +75,7 @@ fun TopBar(
                 SearchBar(
                     modifier = Modifier.height(56.dp),
                     colors = SearchBarDefaults.colors (
-                        containerColor = Color.Transparent
+                        containerColor = Color.Transparent,
                     ),
                     state = searchBarState,
                     inputField = {
@@ -108,7 +108,8 @@ fun TopBar(
                         maxLines = 1
                     )
                     Text(
-                        text = if (serverInfo.serverName != null) serverInfo.ip else "${serverInfo.username}@${serverInfo.ip}",
+                        text = if (serverInfo.serverName != null) serverInfo.ip
+                        else "${serverInfo.username}@${serverInfo.ip}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1

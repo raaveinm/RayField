@@ -22,9 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
@@ -47,7 +45,6 @@ fun BottomBar(
     onAddNewServerNavigation: () -> Unit,
     selectedDestination: Int
 ) {
-    val onSurface = MaterialTheme.colorScheme.onSurface
     val blurred = MaterialTheme.colorScheme.primary.copy(alpha = .64f)
     val secondaryBlurred = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = .64f)
 
@@ -104,19 +101,22 @@ fun BottomBar(
             onClick = onAddNewServerNavigation,
             modifier = Modifier
                 .padding(start = LocalDimensions.current.extraLargeSize)
-                .blurredBackground(
-                    blurHolder = blurHolder,
-                    blurRadius = 8.dp,
-                    tileMode = TileMode.Mirror)
                 .sizeIn(maxWidth = 56.dp, maxHeight = 56.dp),
             containerColor = secondaryBlurred,
             content = {
-                ActionIconButton(
-                    icon = Icons.Outlined.Add,
-                    contentDescription = "add_new_server",
-                    onClick = onAddNewServerNavigation,
-                    color = Color.Transparent
-                )
+                Box(Modifier.fillMaxSize()
+                    .blurredBackground(
+                    blurHolder = blurHolder,
+                    blurRadius = 8.dp,
+                    tileMode = TileMode.Mirror),
+                    contentAlignment = Alignment.Center) {
+                    ActionIconButton(
+                        icon = Icons.Outlined.Add,
+                        contentDescription = "add_new_server",
+                        onClick = onAddNewServerNavigation,
+                        color = Color.Transparent
+                    )
+                }
             }
         )
     }
