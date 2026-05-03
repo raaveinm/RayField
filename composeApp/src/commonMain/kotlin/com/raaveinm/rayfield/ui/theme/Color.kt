@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.raaveinm.rayfield.ui.theme
 
 import androidx.compose.ui.graphics.Color
@@ -217,10 +219,3 @@ val surfaceContainerLowDarkHighContrast = Color(0xFF221E24)
 val surfaceContainerDarkHighContrast = Color(0xFF332F35)
 val surfaceContainerHighDarkHighContrast = Color(0xFF3E3A40)
 val surfaceContainerHighestDarkHighContrast = Color(0xFF4A454B)
-
-
-
-
-
-
-

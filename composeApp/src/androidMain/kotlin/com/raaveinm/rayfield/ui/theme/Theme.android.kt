@@ -26,7 +26,7 @@ actual fun RayFieldTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = AppTypography,
-        shapes = AppShapes,
+        shapes = RayShapes,
         content = content
     )
 }

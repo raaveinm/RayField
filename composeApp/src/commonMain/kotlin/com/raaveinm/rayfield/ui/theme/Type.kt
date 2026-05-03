@@ -6,7 +6,6 @@ import androidx.compose.ui.text.font.FontFamily
 expect val bodyFontFamily: FontFamily
 expect val displayFontFamily: FontFamily
 
-// Default Material 3 typography values
 private val baseline = Typography()
 
 val AppTypography = Typography(

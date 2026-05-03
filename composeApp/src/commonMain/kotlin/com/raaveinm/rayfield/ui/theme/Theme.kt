@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.raaveinm.rayfield.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -5,6 +7,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 val lightScheme = lightColorScheme(
@@ -249,3 +252,5 @@ expect fun RayFieldTheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 )
+
+val LocalDimensions = staticCompositionLocalOf { Dimensions() }

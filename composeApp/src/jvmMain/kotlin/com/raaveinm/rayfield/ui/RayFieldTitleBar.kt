@@ -1,10 +1,11 @@
-package com.raaveinm.rayfield
+package com.raaveinm.rayfield.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.window.WindowDraggableArea
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -25,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -38,7 +41,8 @@ fun WindowScope.RayFieldTitleBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(32.dp)
+            .height(24.dp)
+            .clip(RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp))
             .background(MaterialTheme.colorScheme.surface),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -49,7 +53,11 @@ fun WindowScope.RayFieldTitleBar(
                 .padding(start = 16.dp),
         )
 
-        Row(modifier = Modifier.fillMaxHeight()) {
+        Row(
+            modifier = Modifier.fillMaxHeight(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.End
+        ) {
             TitleBarButton(
                 icon = Icons.Default.Minimize,
                 onClick = onMinimize,
@@ -59,7 +67,7 @@ fun WindowScope.RayFieldTitleBar(
             TitleBarButton(
                 icon = Icons.Default.Close,
                 onClick = onClose,
-                hoverColor = MaterialTheme.colorScheme.error
+                hoverColor = MaterialTheme.colorScheme.errorContainer
             )
         }
     }

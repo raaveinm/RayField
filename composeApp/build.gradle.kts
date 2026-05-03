@@ -49,6 +49,11 @@ kotlin {
             implementation(libs.cafe.voyager.transitions)
             // Koin integration
             implementation(libs.voyager.koin)
+
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor)
+
+            implementation(libs.glassmorphism)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
