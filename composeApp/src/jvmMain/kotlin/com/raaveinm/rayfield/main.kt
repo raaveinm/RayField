@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -16,7 +17,9 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.raaveinm.rayfield.domain.helpers.PlatformIdentity
 import com.raaveinm.rayfield.ui.RayFieldTitleBar
+import com.raaveinm.rayfield.ui.state.GlobalBlurHolder
 import com.raaveinm.rayfield.ui.theme.RayFieldTheme
+import io.github.neilyich.glassmorphism.blurredContent
 import io.github.neilyich.glassmorphism.rememberBlurHolder
 import java.awt.Dimension
 
@@ -43,10 +46,9 @@ fun main() = application {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .clip(
+                    .clip(shape =
                         if(platform != PlatformIdentity.Platforms.Linux) RoundedCornerShape(12.dp)
-                        else RoundedCornerShape(0.dp))
-                    .background(MaterialTheme.colorScheme.background),
+                        else RoundedCornerShape(0.dp)),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 RayFieldTitleBar(
@@ -60,12 +62,23 @@ fun main() = application {
                     isMaximized = state.placement == WindowPlacement.Maximized,
                     platform = platform
                 )
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+
+                CompositionLocalProvider(GlobalBlurHolder provides blurHolder) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
 // AmbientDecoration() // yep, for em
-                    App(Modifier.fillMaxSize(), blurHolder)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colorScheme.background)
+                                .blurredContent(blurHolder)
+                        ) {
+                            // TODO AmbientDecoration()
+                        }
+                        App(Modifier.fillMaxSize())
+                    }
                 }
             }
         }

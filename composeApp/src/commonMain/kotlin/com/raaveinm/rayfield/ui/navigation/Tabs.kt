@@ -2,21 +2,13 @@
 
 package com.raaveinm.rayfield.ui.navigation
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.staticCompositionLocalOf
-import cafe.adriel.voyager.core.stack.StackEvent
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
-import cafe.adriel.voyager.transitions.SlideTransition
 import com.raaveinm.rayfield.ui.animations.AnimatedNavTransition
-import com.raaveinm.rayfield.ui.animations.AnimatedTabTransition
 import com.raaveinm.rayfield.ui.animations.StatefulSlideTransition
 import com.raaveinm.rayfield.ui.screen.AddServerScreen
 import com.raaveinm.rayfield.ui.screen.EditScreen
@@ -39,6 +31,11 @@ val Tab.tabIndex: Int
         is SettingsTab -> 2
         is RawSshTab -> 3
         is AddServerTab -> 4
+        is SshTab -> 0
+        is InboundTab -> 1
+        is StreamTab -> 2
+        is OutboundTab -> 3
+        is ProTab -> 4
         else -> 0
     }
 
