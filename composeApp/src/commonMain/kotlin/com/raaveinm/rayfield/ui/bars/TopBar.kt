@@ -30,7 +30,7 @@ import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.raaveinm.rayfield.data.ssh.ServerInfo
+import com.raaveinm.rayfield.data.ssh.ServerUnit
 import com.raaveinm.rayfield.ui.theme.LocalDimensions
 import io.github.neilyich.glassmorphism.BlurHolder
 import io.github.neilyich.glassmorphism.blurredBackground
@@ -44,7 +44,7 @@ fun TopBar(
     onNavigationIconClick: () -> Unit = {},
     searchBarState: SearchBarState? = null,
     textFieldState: TextFieldState? = null,
-    serverInfo: ServerInfo? = null,
+    serverInfo: ServerUnit? = null,
     icon: ImageVector = Icons.Outlined.Home,
     blurHolder: BlurHolder,
 ) {
@@ -103,13 +103,13 @@ fun TopBar(
                         .weight(1f)
                 ) {
                     Text(
-                        text = serverInfo.serverName ?: serverInfo.ip,
+                        text = serverInfo.serverName ?: serverInfo.serverIp,
                         style = MaterialTheme.typography.titleMedium,
                         maxLines = 1
                     )
                     Text(
-                        text = if (serverInfo.serverName != null) serverInfo.ip
-                        else "${serverInfo.username}@${serverInfo.ip}",
+                        text = if (serverInfo.serverName != null) serverInfo.serverIp
+                        else "${serverInfo.serverSshLogin}@${serverInfo.serverIp}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1
@@ -161,7 +161,11 @@ fun TopBarWithSearchProcessPreview() {
 @Composable
 fun TopBarWithServerInfoPreview() {
     TopBar(
-        serverInfo = ServerInfo(ip = "192.168.1.1", serverName = "Home Server"),
+        serverInfo = ServerUnit(
+            serverIp = "192.168.123.123",serverName = "Home Server",
+            serverId = "1", serverSshLogin = "user", serverSshPassword = "",
+            serverSshPrivateKey = null, serverSshPort = 22
+        ),
         blurHolder = rememberBlurHolder()
     )
 }

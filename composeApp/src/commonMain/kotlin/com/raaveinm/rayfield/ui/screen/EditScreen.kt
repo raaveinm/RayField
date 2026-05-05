@@ -1,57 +1,57 @@
 package com.raaveinm.rayfield.ui.screen
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import cafe.adriel.voyager.navigator.tab.TabNavigator
+import com.raaveinm.rayfield.ui.animations.AnimatedTabTransition
+import com.raaveinm.rayfield.ui.fragments.DisplayGrid
+//import com.raaveinm.rayfield.ui.navigation.SshTab
 import com.raaveinm.rayfield.ui.theme.LocalDimensions
+import io.github.neilyich.glassmorphism.blurredContent
+import io.github.neilyich.glassmorphism.rememberBlurHolder
 
 //
 // Created by Kirill "Raaveinm" on 5/3/26.
 //
 
-class EditScreen (
-    val modifier: Modifier = Modifier,
-    val serverLink: String? = null
+data class EditScreen (
+    val serverId: String? = null
 ) : Screen {
+
+    override val key: ScreenKey = "EditScreen:${serverId ?: "root"}"
+
+    @Preview
     @Composable
     override fun Content() {
-        val state = rememberLazyGridState()
+        val localBlurHolder = rememberBlurHolder()
         val navigator = LocalNavigator.currentOrThrow
         val dimen = LocalDimensions.current
-        val padding = PaddingValues(
-            top = dimen.sMediumMargin,
-            bottom = dimen.mediumMargin,
-            start = dimen.extraSmallMargin,
-            end = dimen.extraSmallMargin
-        )
 
-        if (serverLink == null) {
-            Column(modifier = modifier.fillMaxSize()) {
-                LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 360.dp),
-                    state = state,
-                    contentPadding = padding,
-                    horizontalArrangement = Arrangement.spacedBy(dimen.mediumPadding),
-                    verticalArrangement = Arrangement.spacedBy(dimen.mediumPadding),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-//                    items() { server ->
-//
-//                    }
-                }
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            if (serverId == null) {
+                DisplayGrid(navigator)
+                return@Box
             }
+
+            Text(text = "Edit Screen: $serverId", color = Color.Cyan)
+//            TabNavigator(SshTab) { navigator ->
+//                Box(
+//                    modifier = Modifier.blurredContent(localBlurHolder)
+//                ){ AnimatedTabTransition(navigator) }
+//            }
         }
     }
 }

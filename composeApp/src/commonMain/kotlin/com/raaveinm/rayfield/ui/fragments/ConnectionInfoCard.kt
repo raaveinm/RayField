@@ -77,9 +77,9 @@ fun ConnectionInfoCard(
             disabledElevation = 0.dp
         )
     ) {
-        val displayName = remember(serverState.serverName, serverState.serverAddress) {
-            if (serverState.serverName.isNullOrBlank()) serverState.serverAddress
-            else serverState.serverName!!
+        val displayName = remember(serverState.connectionName, serverState.serverAddress) {
+            if (serverState.connectionName.isNullOrBlank()) serverState.serverAddress
+            else serverState.connectionName!!
         }
 
         Column(
@@ -239,21 +239,22 @@ fun ServerCardPreview() {
             ConnectionInfoCard(
                 serverState = ServerState(
                     serverId = "1",
-                    serverName = "Frankfurt Production",
+                    connectionName = "Frankfurt Production",
                     serverAddress = "192.168.123.123:443",
                     sharedLink = "vless://fff73709-bide-120b-a853-2b9s3feas2rr@192.168.123.123:443?type=tcp&encryption=none#frankfut",
-                    protocol = "vless"
+                    protocol = "vless",
+                    jsonSettings = ""
                 )
             )
 
             ConnectionInfoCard(
                 serverState = ServerState(
                     serverId = "1",
-                    serverName = null,
+                    connectionName = null,
                     serverAddress = "lon.rayfield.net:8080",
                     sharedLink = "trojan://password@lon.rayfield.net:8080?security=tls&sni=lon.rayfield.net#London_TLS",
                     protocol = "trojan",
-
+                    jsonSettings = ""
                 ),
             )
         }

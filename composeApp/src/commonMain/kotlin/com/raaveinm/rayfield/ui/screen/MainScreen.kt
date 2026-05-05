@@ -15,19 +15,20 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import com.raaveinm.rayfield.domain.helpers.LocalWindowSize
 import com.raaveinm.rayfield.domain.helpers.WindowSize
 import com.raaveinm.rayfield.ui.fragments.ConnectionInfoCard
-import com.raaveinm.rayfield.ui.mock.mockServers
+import com.raaveinm.rayfield.ui.mock.mockList
+import com.raaveinm.rayfield.ui.navigation.EditTab
 import com.raaveinm.rayfield.ui.theme.LocalDimensions
 
-class MainScreen(
-    val modifier: Modifier = Modifier
-) : Screen {
+class MainScreen : Screen {
 
     @Composable
     override fun Content() {
         val clipboardManager = LocalClipboardManager.current
+        val navigator = LocalTabNavigator.current
         val state = rememberLazyGridState()
         val dimen = LocalDimensions.current
         val windowSize = LocalWindowSize.current
@@ -42,7 +43,7 @@ class MainScreen(
             else dimen.mediumPadding
         )
 
-        Column(modifier = modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize()) {
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 360.dp),
                 state = state,
@@ -51,7 +52,7 @@ class MainScreen(
                 verticalArrangement = Arrangement.spacedBy(mediumPadding),
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(mockServers()) { server ->
+                items(mockList) { server ->
                     ConnectionInfoCard(
                         serverState = server,
                         modifier = Modifier.fillMaxWidth(),
@@ -60,7 +61,7 @@ class MainScreen(
                         },
                         onQrClick = { /* Handle QR */ },
                         onShareClick = { /* Handle Share */ },
-                        onEditClick = { /* Handle Edit */ }
+                        onEditClick = { navigator.current = EditTab(server.serverId) }
                     )
                 }
             }
