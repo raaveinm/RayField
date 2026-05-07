@@ -81,7 +81,7 @@ data class EditScreen (
 
             val windowSize = LocalWindowSize.current
             val scrollState = rememberScrollState()
-            val tabs = listOf(SshTab, InboundTab, StreamTab, OutboundTab, ProTab)
+            val tabs = listOf(SshTab(), InboundTab, StreamTab, OutboundTab, ProTab)
 
             val padding = PaddingValues(
                 top = dimen.sMediumMargin,

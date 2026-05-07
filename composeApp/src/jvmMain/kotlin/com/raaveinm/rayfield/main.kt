@@ -17,6 +17,9 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.raaveinm.rayfield.domain.helpers.PlatformIdentity
 import com.raaveinm.rayfield.ui.RayFieldTitleBar
+import com.raaveinm.rayfield.ui.decoration.Circle
+import com.raaveinm.rayfield.ui.decoration.Circles
+import com.raaveinm.rayfield.ui.decoration.circlesJvm
 import com.raaveinm.rayfield.ui.state.GlobalBlurHolder
 import com.raaveinm.rayfield.ui.theme.RayFieldTheme
 import io.github.neilyich.glassmorphism.blurredContent
@@ -68,15 +71,11 @@ fun main() = application {
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-// AmbientDecoration() // yep, for em
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(MaterialTheme.colorScheme.background)
                                 .blurredContent(blurHolder)
-                        ) {
-                            // TODO AmbientDecoration()
-                        }
+                        ) { Circles(circlesJvm()) }
                         App(Modifier.fillMaxSize())
                     }
                 }

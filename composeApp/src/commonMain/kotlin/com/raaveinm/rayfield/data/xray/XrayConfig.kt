@@ -19,7 +19,11 @@ data class XrayConfig(
     val policy: PolicyConfig? = null,
     val inbounds: List<InboundConfig> = emptyList(),
     val outbounds: List<OutboundConfig> = emptyList(),
+    val transport: TransportConfig? = null,
+    val fakedns: List<FakeDnsConfig>? = null,
+    val reverse: ReverseConfig? = null,
     val observatory: ObservatoryConfig? = null,
+    val metrics: MetricsConfig? = null,
     val stats: JsonObject? = null
 ) {
     @Serializable
@@ -64,7 +68,13 @@ data class XrayConfig(
     @Serializable
     data class RoutingBalancer(
         val tag: String,
-        val selector: List<String>
+        val selector: List<String>,
+        val strategy: BalancerStrategy? = null
+    )
+
+    @Serializable
+    data class BalancerStrategy(
+        val type: String = "random" // "random", "roundRobin", "leastPing"
     )
 
     @Serializable
@@ -75,7 +85,15 @@ data class XrayConfig(
         val protocol: Configurations.protocol,
         val settings: JsonObject,
         val streamSettings: StreamSettings? = null,
-        val sniffing: SniffingConfig? = null
+        val sniffing: SniffingConfig? = null,
+        val allocate: AllocateConfig? = null
+    )
+
+    @Serializable
+    data class AllocateConfig(
+        val strategy: String = "always", // "always", "random"
+        val refresh: Int = 5,
+        val concurrency: Int = 3
     )
 
     @Serializable
@@ -84,7 +102,14 @@ data class XrayConfig(
         val protocol: Configurations.protocol,
         val settings: JsonObject? = null,
         val streamSettings: StreamSettings? = null,
+        val proxySettings: ProxySettings? = null,
         val mux: MuxConfig? = null
+    )
+
+    @Serializable
+    data class ProxySettings(
+        val tag: String? = null,
+        val transportLayer: Boolean = false
     )
 
     @Serializable
@@ -217,6 +242,32 @@ data class XrayConfig(
     )
 
     @Serializable
+    data class VMessInboundSettings(
+        val clients: List<VMessUser>,
+        val default: VMessDefault? = null,
+        val detours: VMessDetour? = null
+    )
+
+    @Serializable
+    data class VMessUser(
+        val id: String,
+        val alterId: Int = 0,
+        val email: String? = null,
+        val level: Int? = null
+    )
+
+    @Serializable
+    data class VMessDefault(
+        val level: Int? = null,
+        val alterId: Int? = null
+    )
+
+    @Serializable
+    data class VMessDetour(
+        val to: String? = null
+    )
+
+    @Serializable
     data class TrojanInboundSettings(
         val clients: List<TrojanUser>,
         val fallbacks: List<Fallback>? = null
@@ -234,6 +285,38 @@ data class XrayConfig(
         val method: String,
         val password: String,
         val network: String? = null
+    )
+
+    @Serializable
+    data class SocksInboundSettings(
+        val auth: String = "noauth", // "noauth" or "password"
+        val accounts: List<SocksAccount>? = null,
+        val udp: Boolean = false,
+        val ip: String? = null,
+        val userLevel: Int = 0
+    )
+
+    @Serializable
+    data class SocksAccount(
+        val user: String,
+        val pass: String
+    )
+
+    @Serializable
+    data class DokodemoInboundSettings(
+        val address: String? = null,
+        val port: Int? = null,
+        val network: String? = "tcp,udp",
+        val followRedirect: Boolean = false,
+        val userLevel: Int = 0
+    )
+
+    @Serializable
+    data class DnsInboundSettings(
+        val network: String? = "tcp,udp",
+        val address: String? = null,
+        val port: Int? = null,
+        val userLevel: Int = 0
     )
 
     @Serializable
@@ -257,6 +340,26 @@ data class XrayConfig(
     )
 
     @Serializable
+    data class VMessOutboundSettings(
+        val vnext: List<VMessOutboundVnext>
+    )
+
+    @Serializable
+    data class VMessOutboundVnext(
+        val address: String,
+        val port: Int,
+        val users: List<VMessOutboundUser>
+    )
+
+    @Serializable
+    data class VMessOutboundUser(
+        val id: String,
+        val alterId: Int = 0,
+        val security: String = "auto",
+        val level: Int? = null
+    )
+
+    @Serializable
     data class TrojanOutboundSettings(
         val servers: List<TrojanOutboundServer>
     )
@@ -268,6 +371,97 @@ data class XrayConfig(
         val password: String,
         val email: String? = null,
         val level: Int? = null
+    )
+
+    @Serializable
+    data class ShadowsocksOutboundSettings(
+        val servers: List<ShadowsocksOutboundServer>
+    )
+
+    @Serializable
+    data class ShadowsocksOutboundServer(
+        val address: String,
+        val port: Int,
+        val method: String,
+        val password: String,
+        val email: String? = null,
+        val level: Int? = null
+    )
+
+    @Serializable
+    data class SocksOutboundSettings(
+        val servers: List<SocksOutboundServer>
+    )
+
+    @Serializable
+    data class SocksOutboundServer(
+        val address: String,
+        val port: Int,
+        val users: List<SocksOutboundUser>? = null
+    )
+
+    @Serializable
+    data class SocksOutboundUser(
+        val user: String,
+        val pass: String,
+        val level: Int? = null
+    )
+
+    @Serializable
+    data class WireguardOutboundSettings(
+        val secretKey: String,
+        val address: List<String>,
+        val peers: List<WireguardPeer>,
+        val mtu: Int = 1420,
+        val reserved: List<Int>? = null,
+        val kernelMode: Boolean = false
+    )
+
+    @Serializable
+    data class WireguardPeer(
+        val publicKey: String,
+        val endpoint: String? = null,
+        val keepAlive: Int = 0,
+        val preSharedKey: String? = null
+    )
+
+    @Serializable
+    data class HysteriaOutboundSettings(
+        val servers: List<HysteriaServer>,
+        val auth: String? = null,
+        val up_mbps: Int? = null,
+        val down_mbps: Int? = null,
+        val obfs: String? = null,
+        val recv_window: Int? = null,
+        val recv_window_conn: Int? = null
+    )
+
+    @Serializable
+    data class HysteriaServer(
+        val address: String,
+        val port: Int
+    )
+
+    @Serializable
+    data class BlackholeOutboundSettings(
+        val response: BlackholeResponse? = null
+    )
+
+    @Serializable
+    data class BlackholeResponse(
+        val type: String = "none" // "none" or "http"
+    )
+
+    @Serializable
+    data class FreedomOutboundSettings(
+        val domainStrategy: Configurations.domainStrategy = Configurations.domainStrategy.AS_IS,
+        val redirect: String? = null,
+        val userLevel: Int = 0
+    )
+
+    @Serializable
+    data class LoopbackOutboundSettings(
+        val inboundTag: String
     )
 
     @Serializable
@@ -313,5 +507,44 @@ data class XrayConfig(
     data class ObservatoryConfig(
         val outboundTag: String? = null,
         val subjectSelector: List<String>? = null
+    )
+
+    @Serializable
+    data class TransportConfig(
+        val tcpSettings: TcpSettings? = null,
+        val kcpSettings: KcpSettings? = null,
+        val wsSettings: WsSettings? = null,
+        val httpSettings: HttpSettings? = null,
+        val quicSettings: QuicSettings? = null,
+        val grpcSettings: GrpcSettings? = null
+    )
+
+    @Serializable
+    data class FakeDnsConfig(
+        val ipPool: String,
+        val poolSize: Int = 65535
+    )
+
+    @Serializable
+    data class ReverseConfig(
+        val bridges: List<ReverseBridge>? = null,
+        val portals: List<ReversePortal>? = null
+    )
+
+    @Serializable
+    data class ReverseBridge(
+        val tag: String,
+        val domain: String
+    )
+
+    @Serializable
+    data class ReversePortal(
+        val tag: String,
+        val domain: String
+    )
+
+    @Serializable
+    data class MetricsConfig(
+        val tag: String
     )
 }

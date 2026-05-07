@@ -1,9 +1,5 @@
 package com.raaveinm.rayfield.ui.fragments
 
-//
-// Created by Kirill "Raaveinm" on 5/4/26.
-//
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.height
@@ -18,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.Navigator
+import com.raaveinm.rayfield.data.ssh.ServerUnit
 import com.raaveinm.rayfield.domain.helpers.WindowSize
 import com.raaveinm.rayfield.domain.helpers.calculateWindowSize
 import com.raaveinm.rayfield.ui.adapters.horizontalMouseScroll
@@ -31,7 +28,8 @@ import com.raaveinm.rayfield.ui.theme.LocalDimensions
 
 
 @Composable fun DisplayGrid(
-    navigator: Navigator
+    navigator: Navigator,
+    serverList: List<ServerUnit>? = null
 ) {
     val dimen = LocalDimensions.current
     val windowSize = calculateWindowSize()
@@ -48,7 +46,7 @@ import com.raaveinm.rayfield.ui.theme.LocalDimensions
             horizontalArrangement = Arrangement.spacedBy(dimen.sMediumPadding),
             verticalArrangement = Arrangement.spacedBy(dimen.sMediumPadding),
         ) {
-            items(mockServers) { server ->
+            items(mockServers) { server -> // TODO(REPLACE mock with actual data, passed via serverList)
                 ServerInfoCard(
                     modifier = Modifier.wrapContentSize(),
                     server = server,
@@ -75,7 +73,7 @@ import com.raaveinm.rayfield.ui.theme.LocalDimensions
             horizontalArrangement = Arrangement.spacedBy(dimen.sMediumPadding),
             verticalArrangement = Arrangement.spacedBy(dimen.sMediumPadding),
         ) {
-            items(mockServers) { server ->
+            items(mockServers) { server -> // TODO(REPLACE mock with actual data, passed via serverList)
                 ServerInfoCard(
                     modifier = Modifier.wrapContentSize(),
                     server = server,

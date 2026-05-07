@@ -23,6 +23,7 @@ sshj = "0.40.0"
 voyagerVersion = "1.1.0-beta03"
 bouncycastle = "1.84"
 coil = "3.4.0"
+ktor = "3.0.3"
 
 [libraries]
 cafe-voyager-transitions = { module = "cafe.adriel.voyager:voyager-transitions", version.ref = "voyagerVersion" }
@@ -59,6 +60,9 @@ voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.
 voyager-tab-navigator = { module = "cafe.adriel.voyager:voyager-tab-navigator", version.ref = "voyagerVersion" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+ktor-client-java = { module = "io.ktor:ktor-client-java", version.ref = "ktor" }
 glassmorphism = { module = "io.github.neilyich:glassmorphism-compose", version.ref = "glassmorphism" }
 
 [plugins]

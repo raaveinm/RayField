@@ -25,6 +25,7 @@ kotlin {
             implementation(libs.androidx.compose.googlefonts)
             implementation(libs.sshj)
             implementation(libs.bouncycastle)
+            implementation(libs.ktor.client.okhttp)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -52,6 +53,7 @@ kotlin {
 
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor)
+            implementation(libs.ktor.client.core)
 
             implementation(libs.glassmorphism)
         }
@@ -63,6 +65,7 @@ kotlin {
             implementation(libs.kotlinx.coroutinesSwing)
             implementation(libs.sshj)
             implementation(libs.bouncycastle)
+            implementation(libs.ktor.client.java)
         }
     }
 }

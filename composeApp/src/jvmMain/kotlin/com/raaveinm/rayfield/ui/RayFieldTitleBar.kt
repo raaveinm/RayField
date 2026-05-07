@@ -35,6 +35,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowScope
+import androidx.compose.ui.zIndex
 import com.raaveinm.rayfield.domain.helpers.PlatformIdentity
 
 @Composable
@@ -51,6 +52,7 @@ fun WindowScope.RayFieldTitleBar(
     ) {
         Row(
             modifier = Modifier
+                .zIndex(1f)
                 .fillMaxWidth()
                 .height(24.dp)
                 .background(MaterialTheme.colorScheme.surface),

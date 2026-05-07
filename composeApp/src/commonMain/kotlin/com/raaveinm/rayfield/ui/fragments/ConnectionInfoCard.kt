@@ -1,7 +1,6 @@
 package com.raaveinm.rayfield.ui.fragments
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Edit
@@ -34,15 +32,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import com.raaveinm.rayfield.data.xray.types.ServerState
+import com.raaveinm.rayfield.ui.adapters.AnyImage
 import com.raaveinm.rayfield.ui.theme.LocalDimensions
 
 @Composable
@@ -55,7 +50,6 @@ fun ConnectionInfoCard(
     onEditClick: () -> Unit = {}
 ) {
     var isExpanded by remember { mutableStateOf(false) }
-
     val dimensions = LocalDimensions.current
     val onContainerColor = MaterialTheme.colorScheme.onPrimaryContainer
 
@@ -85,8 +79,7 @@ fun ConnectionInfoCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = dimensions.mediumPadding)
-                .padding(vertical = dimensions.mediumPadding),
+                .padding(dimensions.mediumPadding),
             verticalArrangement = Arrangement.spacedBy(dimensions.smallPadding)
         ) {
             ///////////////////////////////////////////////
@@ -97,26 +90,13 @@ fun ConnectionInfoCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (serverState.iconLocation == null) {
-                    Text(
-                        text = displayName.take(1).uppercase(),
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(onContainerColor)
-                            .wrapContentHeight(Alignment.CenterVertically),
-                        style = MaterialTheme.typography.headlineLarge,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    )
-                } else {
-                    AsyncImage(
-                        model = serverState.iconLocation,
-                        contentDescription = "server_icon",
-                        modifier = Modifier.size(48.dp).clip(CircleShape),
-                        contentScale = ContentScale.FillBounds
-                    )
-                }
+                AnyImage(
+                    picture = serverState.iconLocation,
+                    name = displayName,
+                    size = 48.dp,
+                    textBackground = onContainerColor,
+                    text = MaterialTheme.colorScheme.primaryContainer
+                )
 
                 Column(
                     modifier = Modifier
@@ -175,8 +155,8 @@ fun ConnectionInfoCard(
                         modifier = Modifier
                             .weight(1f)
                             .padding(end = dimensions.smallPadding)
-                            .clickable(true) {
-                                onCopyClick(serverState.sharedLink+"#${displayName}")
+                            .clickable {
+                                onCopyClick(serverState.sharedLink + "#${displayName}")
                             },
                         softWrap = true,
                         maxLines = 3
@@ -235,13 +215,15 @@ private fun ActionButton(
 @Composable
 fun ServerCardPreview() {
     MaterialTheme {
-        Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(Modifier.fillMaxSize().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)) {
             ConnectionInfoCard(
                 serverState = ServerState(
                     serverId = "1",
                     connectionName = "Frankfurt Production",
                     serverAddress = "192.168.123.123:443",
-                    sharedLink = "vless://fff73709-bide-120b-a853-2b9s3feas2rr@192.168.123.123:443?type=tcp&encryption=none#frankfut",
+                    sharedLink = "vless://fff73709-bide-120b-a853-2b9s3feas2rr" +
+                            "@192.168.123.123:443?type=tcp&encryption=none#frankfut",
                     protocol = "vless",
                     jsonSettings = ""
                 )
@@ -252,7 +234,8 @@ fun ServerCardPreview() {
                     serverId = "1",
                     connectionName = null,
                     serverAddress = "lon.rayfield.net:8080",
-                    sharedLink = "trojan://password@lon.rayfield.net:8080?security=tls&sni=lon.rayfield.net#London_TLS",
+                    sharedLink = "trojan://password@lon.rayfield.net:8080?security=tls&" +
+                            "sni=lon.rayfield.net#London_TLS",
                     protocol = "trojan",
                     jsonSettings = ""
                 ),

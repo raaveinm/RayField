@@ -12,8 +12,8 @@ fun calculateWindowSize(): WindowSize {
     val widthInDp = with(density) { windowInfo.containerSize.width.toDp() }
 
     return when {
-        widthInDp < 600.dp -> WindowSize.COMPACT
-        widthInDp < 840.dp -> WindowSize.MEDIUM
+        widthInDp < 760.dp -> WindowSize.COMPACT
+        widthInDp < 1024.dp -> WindowSize.MEDIUM
         else -> WindowSize.EXPANDED
     }
 }

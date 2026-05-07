@@ -1,8 +1,10 @@
 package com.raaveinm.rayfield.ui.bars
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,6 +33,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.raaveinm.rayfield.data.ssh.ServerUnit
+import com.raaveinm.rayfield.ui.adapters.AnyImage
 import com.raaveinm.rayfield.ui.theme.LocalDimensions
 import io.github.neilyich.glassmorphism.BlurHolder
 import io.github.neilyich.glassmorphism.blurredBackground
@@ -97,22 +100,36 @@ fun TopBar(
             }
 
             serverInfo != null -> {
-                Column(
+                Row(
                     modifier = Modifier
-                        .padding(start = LocalDimensions.current.mediumPadding)
-                        .weight(1f)
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .padding(start = LocalDimensions.current.mediumPadding,
+                            end = LocalDimensions.current.extraSmallPadding)
+                        .weight(1f),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
-                        text = serverInfo.serverName ?: serverInfo.serverIp,
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 1
-                    )
-                    Text(
-                        text = if (serverInfo.serverName != null) serverInfo.serverIp
-                        else "${serverInfo.serverSshLogin}@${serverInfo.serverIp}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1
+                    Column {
+                        Text(
+                            text = serverInfo.serverName ?: serverInfo.serverIp,
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 1
+                        )
+                        Text(
+                            text = if (serverInfo.serverName != null) serverInfo.serverIp
+                            else "${serverInfo.serverSshLogin}@${serverInfo.serverIp}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1
+                        )
+                    }
+                    AnyImage(
+                        picture = serverInfo.iconLocation,
+                        name = serverInfo.serverName ?: serverInfo.serverIp,
+                        size = 48.dp,
+                        textBackground = MaterialTheme.colorScheme.primaryContainer,
+                        text = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }
@@ -162,7 +179,7 @@ fun TopBarWithSearchProcessPreview() {
 fun TopBarWithServerInfoPreview() {
     TopBar(
         serverInfo = ServerUnit(
-            serverIp = "192.168.123.123",serverName = "Home Server",
+            serverIp = "192.168.123.123",serverName = "Raaveinm",
             serverId = "1", serverSshLogin = "user", serverSshPassword = "",
             serverSshPrivateKey = null, serverSshPort = 22
         ),

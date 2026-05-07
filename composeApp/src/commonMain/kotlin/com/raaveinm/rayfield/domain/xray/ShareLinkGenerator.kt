@@ -11,9 +11,12 @@ class ShareLinkGenerator {
     fun generateLink(outbound: XrayConfig.OutboundConfig): String {
         return when (outbound.protocol) {
             Configurations.protocol.VLESS -> buildVlessLink(outbound)
+            Configurations.protocol.VMESS -> buildVmessLink(outbound)
             Configurations.protocol.TROJAN -> buildTrojanLink(outbound)
             Configurations.protocol.SHADOWSOCKS -> buildShadowsocksLink(outbound)
-            else -> throw IllegalArgumentException("${outbound.protocol} is undefined")
+            Configurations.protocol.SOCKS -> buildSocksLink(outbound)
+            Configurations.protocol.WIREGUARD -> buildWireguardLink(outbound)
+            else -> "Protocol ${outbound.protocol} does not support share links"
         }
     }
 
@@ -33,6 +36,48 @@ class ShareLinkGenerator {
         return "vless://$uuid@$address:$port$queryString#$tag"
     }
 
+    private fun buildVmessLink(outbound: XrayConfig.OutboundConfig): String {
+        val settingsJson = outbound.settings ?: return ""
+        val vmessSettings = XrayConfigBuilder.jsonFormatter.decodeFromJsonElement<XrayConfig.VMessOutboundSettings>(settingsJson)
+        val vnext = vmessSettings.vnext.firstOrNull() ?: return ""
+        val user = vnext.users.firstOrNull() ?: return ""
+
+        val stream = outbound.streamSettings
+        val vmessJson = buildJsonObject {
+            put("v", "2")
+            put("ps", outbound.tag ?: "Rayfield_VMess")
+            put("add", vnext.address)
+            put("port", vnext.port)
+            put("id", user.id)
+            put("aid", user.alterId)
+            put("scy", user.security)
+            put("net", stream?.network?.name?.lowercase() ?: "tcp")
+            put("type", "none") // header type
+            
+            stream?.wsSettings?.let {
+                put("path", it.path)
+                it.headers?.get("Host")?.let { host -> put("host", host) }
+            }
+            stream?.httpSettings?.let {
+                put("path", it.path ?: "/")
+                it.host?.firstOrNull()?.let { host -> put("host", host) }
+            }
+            stream?.grpcSettings?.let {
+                put("path", it.serviceName)
+            }
+            
+            put("tls", if (stream?.security == Configurations.security.TLS) "tls" else "none")
+            stream?.tlsSettings?.let {
+                put("sni", it.serverName ?: "")
+                put("fp", it.fingerprint?.name?.lowercase() ?: "")
+                put("alpn", it.alpn?.joinToString(",") ?: "")
+            }
+        }
+
+        val encodedJson = Base64.getEncoder().encodeToString(vmessJson.toString().toByteArray())
+        return "vmess://$encodedJson"
+    }
+
     private fun buildTrojanLink(outbound: XrayConfig.OutboundConfig): String {
         val settingsJson = outbound.settings ?: return ""
         val trojanSettings = XrayConfigBuilder.jsonFormatter.decodeFromJsonElement<XrayConfig.TrojanOutboundSettings>(settingsJson)
@@ -50,15 +95,13 @@ class ShareLinkGenerator {
 
     private fun buildShadowsocksLink(outbound: XrayConfig.OutboundConfig): String {
         val settingsJson = outbound.settings ?: return ""
+        val ssSettings = XrayConfigBuilder.jsonFormatter.decodeFromJsonElement<XrayConfig.ShadowsocksOutboundSettings>(settingsJson)
+        val server = ssSettings.servers.firstOrNull() ?: return ""
 
-        // Ручной парсинг, так как ShadowsocksOutboundSettings не определен в XrayConfig.kt
-        val serversArray = settingsJson["servers"]?.jsonArray
-        val server = serversArray?.firstOrNull()?.jsonObject ?: return ""
-
-        val address = server["address"]?.jsonPrimitive?.content ?: return ""
-        val port = server["port"]?.jsonPrimitive?.int ?: return ""
-        val method = server["method"]?.jsonPrimitive?.content ?: return ""
-        val password = server["password"]?.jsonPrimitive?.content ?: return ""
+        val address = server.address
+        val port = server.port
+        val method = server.method
+        val password = server.password
 
         // Формат SIP002 для Shadowsocks требует Base64(method:password)
         val userInfo = "$method:$password".toByteArray()
@@ -68,6 +111,35 @@ class ShareLinkGenerator {
         val tag = encodeUri(outbound.tag ?: "Rayfield_Shadowsocks")
 
         return "ss://$encodedUserInfo@$address:$port$queryString#$tag"
+    }
+
+    private fun buildSocksLink(outbound: XrayConfig.OutboundConfig): String {
+        val settingsJson = outbound.settings ?: return ""
+        val socksSettings = XrayConfigBuilder.jsonFormatter.decodeFromJsonElement<XrayConfig.SocksOutboundSettings>(settingsJson)
+        val server = socksSettings.servers.firstOrNull() ?: return ""
+
+        val address = server.address
+        val port = server.port
+        val user = server.users?.firstOrNull()
+
+        val auth = if (user != null) {
+            val userInfo = "${user.user}:${user.pass}".toByteArray()
+            Base64.getUrlEncoder().withoutPadding().encodeToString(userInfo) + "@"
+        } else ""
+
+        val tag = encodeUri(outbound.tag ?: "Rayfield_Socks")
+        return "socks://$auth$address:$port#$tag"
+    }
+
+    private fun buildWireguardLink(outbound: XrayConfig.OutboundConfig): String {
+        // Wireguard share links are less standardized, but often use wg://
+        val settingsJson = outbound.settings ?: return ""
+        val wgSettings = XrayConfigBuilder.jsonFormatter.decodeFromJsonElement<XrayConfig.WireguardOutboundSettings>(settingsJson)
+        val peer = wgSettings.peers.firstOrNull() ?: return ""
+
+        val tag = encodeUri(outbound.tag ?: "Rayfield_Wireguard")
+        // Minimal WG link
+        return "wg://${peer.publicKey}@${peer.endpoint ?: "0.0.0.0"}#$tag"
     }
 
     private fun buildStreamParams(stream: XrayConfig.StreamSettings?, flow: Configurations.flow?): String {

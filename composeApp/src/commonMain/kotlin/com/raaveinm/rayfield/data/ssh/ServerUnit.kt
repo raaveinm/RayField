@@ -8,4 +8,5 @@ data class ServerUnit(
     val serverSshPassword: String?,
     val serverSshPrivateKey: String?,
     val serverSshPort: Int,
+    val iconLocation: Any? = null
 )

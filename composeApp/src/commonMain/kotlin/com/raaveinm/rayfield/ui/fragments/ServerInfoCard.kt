@@ -1,14 +1,11 @@
 package com.raaveinm.rayfield.ui.fragments
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -16,14 +13,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import com.raaveinm.rayfield.data.ssh.ServerUnit
+import com.raaveinm.rayfield.ui.adapters.AnyImage
 import com.raaveinm.rayfield.ui.theme.LocalDimensions
+import rayfield.composeapp.generated.resources.Res
+import rayfield.composeapp.generated.resources.flag_germany
 
 //
 // Created by Kirill "Raaveinm" on 5/3/26.
@@ -33,8 +29,7 @@ import com.raaveinm.rayfield.ui.theme.LocalDimensions
 fun ServerInfoCard(
     modifier: Modifier = Modifier,
     server: ServerUnit,
-    onClick: () -> Unit = {},
-    picture: String? = null,
+    onClick: () -> Unit = {}
 ) {
     val dimensions = LocalDimensions.current
 
@@ -67,26 +62,14 @@ fun ServerInfoCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             val displayName = server.serverName ?: server.serverIp
-            if (picture == null) {
-                Text(
-                    text = displayName.take(1).uppercase(),
-                    modifier = Modifier
-                        .size(96.dp)
-                        .clip(CircleShape)
-                        .background(onPrimaryContainer)
-                        .wrapContentHeight(Alignment.CenterVertically),
-                    style = MaterialTheme.typography.headlineLarge,
-                    textAlign = TextAlign.Center,
-                    color = surface
-                )
-            } else {
-                AsyncImage(
-                    model = picture,
-                    contentDescription = "server_icon",
-                    modifier = Modifier.size(96.dp).clip(CircleShape),
-                    contentScale = ContentScale.FillBounds
-                )
-            }
+
+            AnyImage(
+                picture = server.iconLocation,
+                name = displayName,
+                size = 96.dp,
+                textBackground = onPrimaryContainer,
+                text = surface
+            )
 
             Text(
                 text = displayName,
@@ -112,6 +95,7 @@ fun ServerInfoCardPreview() {
                 serverSshPassword = "",
                 serverSshPrivateKey = null,
                 serverSshPort = 22,
+                iconLocation = Res.drawable.flag_germany
             )
         )
     }

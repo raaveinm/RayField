@@ -5,7 +5,7 @@ data class ServerState(
     var connectionName: String? = null,
     val serverAddress: String,
     val sharedLink: String,
-    val iconLocation: String? = null,
+    val iconLocation: Any? = null,
     val protocol: String,
     val jsonSettings: String,
 )

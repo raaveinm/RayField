@@ -18,6 +18,7 @@ import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -53,8 +54,8 @@ fun BottomBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(Modifier
+            .shadow(6.dp, RoundedCornerShape(50.dp))
             .clip(RoundedCornerShape(50.dp))
-            .shadow(6.dp)
             .blurredBackground(
                 blurHolder = blurHolder,
                 blurRadius = 8.dp,
@@ -102,7 +103,6 @@ fun BottomBar(
             modifier = Modifier
                 .padding(start = LocalDimensions.current.extraLargeSize)
                 .sizeIn(maxWidth = 56.dp, maxHeight = 56.dp),
-            containerColor = secondaryBlurred,
             content = {
                 Box(Modifier.fillMaxSize()
                     .blurredBackground(
@@ -110,11 +110,11 @@ fun BottomBar(
                     blurRadius = 8.dp,
                     tileMode = TileMode.Mirror),
                     contentAlignment = Alignment.Center) {
-                    ActionIconButton(
-                        icon = Icons.Outlined.Add,
+                    Icon(
+                        imageVector = Icons.Outlined.Add,
                         contentDescription = "add_new_server",
-                        onClick = onAddNewServerNavigation,
-                        color = Color.Transparent
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }
@@ -132,19 +132,14 @@ fun BottomBar(
     IconButton(
         onClick = onClick,
         modifier = modifier,
+        colors = IconButtonDefaults.iconButtonColors(containerColor = color),
         content = {
-            Box(Modifier
-                .fillMaxSize()
-                .background(color),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = contentDescription,
-                    tint = MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.size(24.dp)
+            )
         }
     )
 }

@@ -47,6 +47,18 @@ object XrayConfigBuilder {
         return toSettings(settings)
     }
 
+    fun vmessInboundSettings(
+        uuid: String,
+        alterId: Int = 0,
+        email: String? = null,
+        level: Int? = null
+    ): JsonObject {
+        val settings = XrayConfig.VMessInboundSettings(
+            clients = listOf(XrayConfig.VMessUser(id = uuid, alterId = alterId, email = email, level = level))
+        )
+        return toSettings(settings)
+    }
+
     fun trojanInboundSettings(
         password: String,
         email: String? = null,
@@ -73,11 +85,64 @@ object XrayConfigBuilder {
         return toSettings(settings)
     }
 
+    fun socksInboundSettings(
+        auth: String = "noauth",
+        udp: Boolean = false,
+        ip: String? = null,
+        userLevel: Int = 0
+    ): JsonObject {
+        val settings = XrayConfig.SocksInboundSettings(
+            auth = auth,
+            udp = udp,
+            ip = ip,
+            userLevel = userLevel
+        )
+        return toSettings(settings)
+    }
+
+    fun dokodemoInboundSettings(
+        address: String? = null,
+        port: Int? = null,
+        network: String? = "tcp,udp",
+        followRedirect: Boolean = false,
+        userLevel: Int = 0
+    ): JsonObject {
+        val settings = XrayConfig.DokodemoInboundSettings(
+            address = address,
+            port = port,
+            network = network,
+            followRedirect = followRedirect,
+            userLevel = userLevel
+        )
+        return toSettings(settings)
+    }
+
+    fun dnsInboundSettings(
+        network: String? = "tcp,udp",
+        address: String? = null,
+        port: Int? = null,
+        userLevel: Int = 0
+    ): JsonObject {
+        val settings = XrayConfig.DnsInboundSettings(
+            network = network,
+            address = address,
+            port = port,
+            userLevel = userLevel
+        )
+        return toSettings(settings)
+    }
+
     fun freedomOutboundSettings(
-        domainStrategy: Configurations.domainStrategy = Configurations.domainStrategy.AS_IS
-    ): JsonObject = buildJsonObject {
-        // Enums can be easily converted back to their Xray string formats
-        put("domainStrategy", jsonFormatter.encodeToJsonElement(domainStrategy))
+        domainStrategy: Configurations.domainStrategy = Configurations.domainStrategy.AS_IS,
+        redirect: String? = null,
+        userLevel: Int = 0
+    ): JsonObject {
+        val settings = XrayConfig.FreedomOutboundSettings(
+            domainStrategy = domainStrategy,
+            redirect = redirect,
+            userLevel = userLevel
+        )
+        return toSettings(settings)
     }
 
     fun vlessOutboundSettings(
@@ -102,6 +167,28 @@ object XrayConfigBuilder {
         return toSettings(settings)
     }
 
+    fun vmessOutboundSettings(
+        address: String,
+        port: Int,
+        uuid: String,
+        alterId: Int = 0,
+        security: String = "auto",
+        level: Int? = null
+    ): JsonObject {
+        val settings = XrayConfig.VMessOutboundSettings(
+            vnext = listOf(
+                XrayConfig.VMessOutboundVnext(
+                    address = address,
+                    port = port,
+                    users = listOf(
+                        XrayConfig.VMessOutboundUser(id = uuid, alterId = alterId, security = security, level = level)
+                    )
+                )
+            )
+        )
+        return toSettings(settings)
+    }
+
     fun trojanOutboundSettings(
         address: String,
         port: Int,
@@ -119,6 +206,107 @@ object XrayConfigBuilder {
                     level = level
                 )
             )
+        )
+        return toSettings(settings)
+    }
+
+    fun shadowsocksOutboundSettings(
+        address: String,
+        port: Int,
+        method: String,
+        password: String,
+        email: String? = null,
+        level: Int? = null
+    ): JsonObject {
+        val settings = XrayConfig.ShadowsocksOutboundSettings(
+            servers = listOf(
+                XrayConfig.ShadowsocksOutboundServer(
+                    address = address,
+                    port = port,
+                    method = method,
+                    password = password,
+                    email = email,
+                    level = level
+                )
+            )
+        )
+        return toSettings(settings)
+    }
+
+    fun socksOutboundSettings(
+        address: String,
+        port: Int,
+        user: String? = null,
+        pass: String? = null,
+        level: Int? = null
+    ): JsonObject {
+        val users = if (user != null && pass != null) {
+            listOf(XrayConfig.SocksOutboundUser(user = user, pass = pass, level = level))
+        } else null
+
+        val settings = XrayConfig.SocksOutboundSettings(
+            servers = listOf(
+                XrayConfig.SocksOutboundServer(
+                    address = address,
+                    port = port,
+                    users = users
+                )
+            )
+        )
+        return toSettings(settings)
+    }
+
+    fun wireguardOutboundSettings(
+        secretKey: String,
+        address: List<String>,
+        publicKey: String,
+        endpoint: String? = null,
+        keepAlive: Int = 0,
+        mtu: Int = 1420,
+        reserved: List<Int>? = null
+    ): JsonObject {
+        val settings = XrayConfig.WireguardOutboundSettings(
+            secretKey = secretKey,
+            address = address,
+            peers = listOf(XrayConfig.WireguardPeer(publicKey = publicKey, endpoint = endpoint, keepAlive = keepAlive)),
+            mtu = mtu,
+            reserved = reserved
+        )
+        return toSettings(settings)
+    }
+
+    fun hysteriaOutboundSettings(
+        address: String,
+        port: Int,
+        auth: String? = null,
+        up_mbps: Int? = null,
+        down_mbps: Int? = null,
+        obfs: String? = null
+    ): JsonObject {
+        val settings = XrayConfig.HysteriaOutboundSettings(
+            servers = listOf(XrayConfig.HysteriaServer(address = address, port = port)),
+            auth = auth,
+            up_mbps = up_mbps,
+            down_mbps = down_mbps,
+            obfs = obfs
+        )
+        return toSettings(settings)
+    }
+
+    fun blackholeOutboundSettings(
+        type: String = "none"
+    ): JsonObject {
+        val settings = XrayConfig.BlackholeOutboundSettings(
+            response = XrayConfig.BlackholeResponse(type = type)
+        )
+        return toSettings(settings)
+    }
+
+    fun loopbackOutboundSettings(
+        inboundTag: String
+    ): JsonObject {
+        val settings = XrayConfig.LoopbackOutboundSettings(
+            inboundTag = inboundTag
         )
         return toSettings(settings)
     }
