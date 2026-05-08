@@ -7,6 +7,8 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.androidx.room3)
 }
 
 kotlin {
@@ -26,6 +28,7 @@ kotlin {
             implementation(libs.sshj)
             implementation(libs.bouncycastle)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.koin.android)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -39,6 +42,9 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
+
+            implementation(libs.androidx.room3.runtime)
+            implementation(libs.androidx.sqlite.bundled)
 
              implementation(libs.koin.core)
 
@@ -98,8 +104,14 @@ configure<com.android.build.api.dsl.ApplicationExtension> { // Android
     }
 }
 
+room3 {
+    schemaDirectory("$projectDir/schemas")
+}
+
 dependencies {
     debugImplementation(libs.compose.uiTooling)
+    add("kspAndroid", libs.androidx.room3.compiler)
+    add("kspJvm", libs.androidx.room3.compiler)
 }
 
 compose.desktop {

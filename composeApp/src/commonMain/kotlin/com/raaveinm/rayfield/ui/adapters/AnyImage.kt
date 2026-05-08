@@ -22,6 +22,7 @@ import coil3.compose.AsyncImagePainter
 import coil3.compose.SubcomposeAsyncImage
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import rayfield.composeapp.generated.resources.*
 
 //
 // Created by Kirill "Raaveinm" on 5/6/26.
@@ -29,7 +30,7 @@ import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun AnyImage(
-    picture: Any?,
+    picture: String?,
     name: String,
     size: Dp,
     textBackground: Color,
@@ -39,15 +40,20 @@ fun AnyImage(
         .size(size)
         .clip(CircleShape)
 
-    when (picture) {
-        null -> AnyImagePlaceholder(name, commonModifier, textBackground, text)
-        is DrawableResource -> {
-            Image(
-                painter = painterResource(picture),
-                contentDescription = "server_icon",
-                modifier = commonModifier,
-                contentScale = ContentScale.Crop
-            )
+    when {
+        picture == null -> AnyImagePlaceholder(name, commonModifier, textBackground, text)
+        picture.startsWith("res:") -> {
+            val resName = picture.removePrefix("res:")
+            val drawableResource = getDrawableByName(resName)
+
+            if (drawableResource != null) {
+                Image(
+                    painter = painterResource(drawableResource),
+                    contentDescription = "server_icon",
+                    modifier = commonModifier,
+                    contentScale = ContentScale.Crop
+                )
+            } else AnyImagePlaceholder(name, commonModifier, textBackground, text)
         }
         else -> {
             SubcomposeAsyncImage(
@@ -69,6 +75,28 @@ fun AnyImage(
                 }
             }
         }
+    }
+}
+
+private fun getDrawableByName(name: String): DrawableResource? {
+    return when (name) {
+        "flag_armenia" -> Res.drawable.flag_armenia
+        "flag_austria" -> Res.drawable.flag_austria
+        "flag_estonia" -> Res.drawable.flag_estonia
+        "flag_finland" -> Res.drawable.flag_finland
+        "flag_france" -> Res.drawable.flag_france
+        "flag_georgia" -> Res.drawable.flag_georgia
+        "flag_germany" -> Res.drawable.flag_germany
+        "flag_greece" -> Res.drawable.flag_greece
+        "flag_italy" -> Res.drawable.flag_italy
+        "flag_latvia" -> Res.drawable.flag_latvia
+        "flag_norway" -> Res.drawable.flag_norway
+        "flag_poland" -> Res.drawable.flag_poland
+        "flag_sweden" -> Res.drawable.flag_sweden
+        "flag_uk" -> Res.drawable.flag_uk
+        "flag_ukraine" -> Res.drawable.flag_ukraine
+        "flag_united_states" -> Res.drawable.flag_united_states
+        else -> null
     }
 }
 

@@ -56,8 +56,7 @@ fun ConnectionInfoCard(
     Card(
         modifier = modifier
             .width(360.dp)
-            .wrapContentHeight()
-            .animateContentSize(),
+            .wrapContentHeight(),
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -79,7 +78,8 @@ fun ConnectionInfoCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(dimensions.mediumPadding),
+                .padding(dimensions.mediumPadding)
+                .animateContentSize(),
             verticalArrangement = Arrangement.spacedBy(dimensions.smallPadding)
         ) {
             ///////////////////////////////////////////////
@@ -225,7 +225,8 @@ fun ServerCardPreview() {
                     sharedLink = "vless://fff73709-bide-120b-a853-2b9s3feas2rr" +
                             "@192.168.123.123:443?type=tcp&encryption=none#frankfut",
                     protocol = "vless",
-                    jsonSettings = ""
+                    jsonSettings = "",
+                    configId = "1"
                 )
             )
 
@@ -238,6 +239,7 @@ fun ServerCardPreview() {
                             "sni=lon.rayfield.net#London_TLS",
                     protocol = "trojan",
                     jsonSettings = ""
+                    ,configId = "1"
                 ),
             )
         }

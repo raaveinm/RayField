@@ -95,7 +95,7 @@ fun ServerInfoCardPreview() {
                 serverSshPassword = "",
                 serverSshPrivateKey = null,
                 serverSshPort = 22,
-                iconLocation = Res.drawable.flag_germany
+                iconLocation = "res:flag_germany"
             )
         )
     }

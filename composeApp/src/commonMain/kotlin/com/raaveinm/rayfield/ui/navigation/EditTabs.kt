@@ -9,7 +9,6 @@ package com.raaveinm.rayfield.ui.navigation
 import androidx.compose.runtime.Composable
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
-import com.raaveinm.rayfield.data.ssh.ServerUnit
 import com.raaveinm.rayfield.ui.screen.edit.InboundScreen
 import com.raaveinm.rayfield.ui.screen.edit.OutboundScreen
 import com.raaveinm.rayfield.ui.screen.edit.ProScreen
@@ -21,13 +20,13 @@ import com.raaveinm.rayfield.ui.screen.edit.StreamScreen
 //
 
 data class SshTab(
-    val serverUnit: ServerUnit? = null
+    val serverId: String? = null
 ) : Tab {
     override val options: TabOptions
         @Composable get() = TabOptions(index = 0u, title = "SSH")
     @Composable
     override fun Content() {
-        SshScreen(serverUnit)
+        SshScreen(serverId)
     }
 }
 

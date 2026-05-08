@@ -13,6 +13,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,41 +24,48 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.raaveinm.rayfield.data.ssh.ServerUnit
+import cafe.adriel.voyager.koin.koinScreenModel
+import cafe.adriel.voyager.core.screen.Screen
 import com.raaveinm.rayfield.domain.helpers.LocalWindowSize
 import com.raaveinm.rayfield.domain.helpers.WindowSize
 import com.raaveinm.rayfield.ui.adapters.IpAutoFormatTransformation
 import com.raaveinm.rayfield.ui.fragments.ConnectedButtonGroup
 import com.raaveinm.rayfield.ui.fragments.SettingOutlinedText
 import com.raaveinm.rayfield.ui.state.GlobalBlurHolder
+import com.raaveinm.rayfield.ui.state.configuration.SshScreenModel
 import com.raaveinm.rayfield.ui.theme.LocalDimensions
 import io.github.neilyich.glassmorphism.blurredBackground
 import io.github.neilyich.glassmorphism.rememberBlurHolder
+import org.koin.core.parameter.parametersOf
 
 //
 // Created by Kirill "Raaveinm" on 5/4/26.
 //
 
 @Composable
-fun SshScreen(serverUnit: ServerUnit? = null) {
+fun Screen.SshScreen(serverId: String? = null) {
     val dimen = LocalDimensions.current
     val windowSize = LocalWindowSize.current
+
+    val screenModel = koinScreenModel<SshScreenModel> { parametersOf(serverId) }
+    val state by screenModel.state.collectAsState()
 
     val globalBlurHolder = GlobalBlurHolder.current ?: rememberBlurHolder()
     val lazyState = rememberLazyListState()
 
     // TODO("Replace with Intent State according to MVI")
-    val ipState = TextFieldState(initialText = serverUnit?.serverIp ?: "")
-    val portState = TextFieldState(initialText = serverUnit?.serverSshPort?.toString() ?: "22")
+    val ipState = remember(state.isLoading) { TextFieldState(initialText = state.ip) }
+    val portState = remember(state.isLoading) { TextFieldState(initialText = state.port) }
     val options = listOf("Password", "Key")
     var loginState by remember { mutableStateOf(options.first()) }
-    val passwordState = TextFieldState(initialText = serverUnit?.serverSshPassword ?: "")
-    val pathToFileState = TextFieldState(initialText = serverUnit?.serverSshPrivateKey ?: "")
+    val passwordState = remember(state.isLoading) { TextFieldState(initialText = state.password ?: "") }
+    val pathToFileState = remember(state.isLoading) { TextFieldState(initialText = state.pathToPkey ?: "") }
+    val sshUserState = remember(state.isLoading) { TextFieldState(initialText = state.login) }
 
     val onSurface = MaterialTheme.colorScheme.onSurface
 
     val padding = PaddingValues(
-        vertical = dimen.sMediumMargin,
+        vertical = dimen.smallMargin,
         horizontal = when(windowSize){
             WindowSize.EXPANDED -> dimen.sMediumMargin
             WindowSize.MEDIUM -> dimen.extraSmallMargin
@@ -114,6 +122,18 @@ fun SshScreen(serverUnit: ServerUnit? = null) {
             }
 
             item {
+                SettingOutlinedText(
+                    state = sshUserState,
+                    label = { Text("User") },
+                    modifier = Modifier.fillMaxWidth(),
+                    isDone = false,
+                    onKeyboardAction = {
+                    // TODO(Handle Done action)
+                    }
+                )
+            }
+
+            item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -146,7 +166,7 @@ fun SshScreen(serverUnit: ServerUnit? = null) {
                             .padding(vertical = 8.dp),
                         contentAlignment = Alignment.CenterStart
                     ) {
-                        Text("FilePicker $pathToFileState", color = Color.Cyan)
+                        Text("FilePicker ${pathToFileState.text}", color = Color.Cyan)
                     }
                 }
             }
