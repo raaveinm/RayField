@@ -18,7 +18,12 @@ class SshScreenModel(
     val serverDao: ServerDao,
     private val initialServerId: String? = null,
 ) : ScreenModel {
-    private val _state = MutableStateFlow(SshDraftState(serverId = initialServerId ?: ""))
+    private val _state = MutableStateFlow(
+        SshDraftState(
+            serverId = initialServerId ?: "",
+            isLoading = initialServerId != null
+        )
+    )
     val state = _state.asStateFlow()
 
     ///////////////////////////////////////////////

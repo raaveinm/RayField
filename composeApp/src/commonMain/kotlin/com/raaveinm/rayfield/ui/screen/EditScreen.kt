@@ -18,6 +18,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
+import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.TabNavigator
@@ -41,6 +44,7 @@ import com.raaveinm.rayfield.ui.navigation.ProTab
 import com.raaveinm.rayfield.ui.navigation.SshTab
 import com.raaveinm.rayfield.ui.navigation.StreamTab
 import com.raaveinm.rayfield.ui.state.GlobalBlurHolder
+import com.raaveinm.rayfield.ui.state.MainScreenModel
 import com.raaveinm.rayfield.ui.theme.LocalDimensions
 import io.github.neilyich.glassmorphism.blurredBackground
 import io.github.neilyich.glassmorphism.blurredContent
@@ -59,6 +63,9 @@ data class EditScreen (
     @Preview
     @Composable
     override fun Content() {
+        val screenModel = koinScreenModel<MainScreenModel>()
+        val serverList by screenModel.serverUnits.collectAsState()
+
         val globalBlurHolder = GlobalBlurHolder.current ?: rememberBlurHolder()
         val localBlurHolder = rememberBlurHolder()
         val navigator = LocalNavigator.currentOrThrow
@@ -75,7 +82,7 @@ data class EditScreen (
             contentAlignment = Alignment.Center
         ) {
             if (serverId == null) {
-                DisplayGrid(navigator)
+                DisplayGrid(navigator, serverList)
                 return@Box
             }
 

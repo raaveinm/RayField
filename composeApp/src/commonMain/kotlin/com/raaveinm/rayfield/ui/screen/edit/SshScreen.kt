@@ -10,9 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,14 +26,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.koin.koinScreenModel
 import com.raaveinm.rayfield.domain.helpers.LocalWindowSize
 import com.raaveinm.rayfield.domain.helpers.WindowSize
 import com.raaveinm.rayfield.ui.adapters.IpAutoFormatTransformation
 import com.raaveinm.rayfield.ui.fragments.ConnectedButtonGroup
 import com.raaveinm.rayfield.ui.fragments.SettingOutlinedText
 import com.raaveinm.rayfield.ui.state.GlobalBlurHolder
+import com.raaveinm.rayfield.ui.state.configuration.SshIntent
 import com.raaveinm.rayfield.ui.state.configuration.SshScreenModel
 import com.raaveinm.rayfield.ui.theme.LocalDimensions
 import io.github.neilyich.glassmorphism.blurredBackground
@@ -53,16 +56,46 @@ fun Screen.SshScreen(serverId: String? = null) {
     val globalBlurHolder = GlobalBlurHolder.current ?: rememberBlurHolder()
     val lazyState = rememberLazyListState()
 
-    // TODO("Replace with Intent State according to MVI")
-    val ipState = remember(state.isLoading) { TextFieldState(initialText = state.ip) }
-    val portState = remember(state.isLoading) { TextFieldState(initialText = state.port) }
     val options = listOf("Password", "Key")
     var loginState by remember { mutableStateOf(options.first()) }
-    val passwordState = remember(state.isLoading) { TextFieldState(initialText = state.password ?: "") }
-    val pathToFileState = remember(state.isLoading) { TextFieldState(initialText = state.pathToPkey ?: "") }
-    val sshUserState = remember(state.isLoading) { TextFieldState(initialText = state.login) }
 
-    val onSurface = MaterialTheme.colorScheme.onSurface
+    val ipState = remember { TextFieldState() }
+    val portState = remember { TextFieldState() }
+    val sshUserState = remember { TextFieldState() }
+    val passwordState = remember { TextFieldState() }
+    val pathToFileState = remember { TextFieldState() }
+    val serverName = remember { TextFieldState() }
+
+    LaunchedEffect(state.isLoading) {
+        if (!state.isLoading && state.serverId.isNotEmpty()) {
+            if (ipState.text.isEmpty()) ipState.edit { replace(0, length, state.ip) }
+            if (portState.text.isEmpty()) portState.edit { replace(0, length, state.port) }
+            if (sshUserState.text.isEmpty()) sshUserState.edit { replace(0, length, state.login) }
+            if (passwordState.text.isEmpty()) passwordState.edit { replace(0, length, state.password ?: "") }
+            if (pathToFileState.text.isEmpty()) pathToFileState.edit { replace(0, length, state.pathToPkey ?: "") }
+            if (serverName.text.isEmpty()) serverName.edit { replace(0, length, state.name) }
+        }
+    }
+
+    LaunchedEffect(ipState.text) {
+        if (!state.isLoading) screenModel.processIntent(SshIntent.UpdateIp(ipState.text.toString()))
+    }
+    LaunchedEffect(portState.text) {
+        if (!state.isLoading) screenModel.processIntent(SshIntent.UpdatePort(portState.text.toString()))
+    }
+    LaunchedEffect(sshUserState.text) {
+        if (!state.isLoading) screenModel.processIntent(SshIntent.UpdateLogin(sshUserState.text.toString()))
+    }
+    LaunchedEffect(passwordState.text) {
+        if (!state.isLoading) screenModel.processIntent(SshIntent.UpdatePassword(passwordState.text.toString()))
+    }
+    LaunchedEffect(pathToFileState.text) {
+        if (!state.isLoading) screenModel.processIntent(SshIntent.UpdatePathToPkey(pathToFileState.text.toString()))
+    }
+    LaunchedEffect(serverName.text) {
+        if (!state.isLoading) screenModel.processIntent(SshIntent.UpdateName(serverName.text.toString()))
+    }
+
 
     val padding = PaddingValues(
         vertical = dimen.smallMargin,
@@ -102,10 +135,7 @@ fun Screen.SshScreen(serverId: String? = null) {
                         modifier = Modifier.weight(0.7f),
                         isDone = false,
                         keyboardType = KeyboardType.Number,
-                        inputTransformation = IpAutoFormatTransformation,
-                        onKeyboardAction = {
-                            // TODO(Handle Done action)
-                        }
+                        inputTransformation = IpAutoFormatTransformation
                     )
 
                     SettingOutlinedText(
@@ -113,10 +143,7 @@ fun Screen.SshScreen(serverId: String? = null) {
                         label = { Text("Port") },
                         modifier = Modifier.weight(0.3f),
                         isDone = false,
-                        keyboardType = KeyboardType.Number,
-                        onKeyboardAction = {
-                            // TODO(Handle Done action)
-                        }
+                        keyboardType = KeyboardType.Number
                     )
                 }
             }
@@ -126,12 +153,10 @@ fun Screen.SshScreen(serverId: String? = null) {
                     state = sshUserState,
                     label = { Text("User") },
                     modifier = Modifier.fillMaxWidth(),
-                    isDone = false,
-                    onKeyboardAction = {
-                    // TODO(Handle Done action)
-                    }
+                    isDone = false
                 )
             }
+
 
             item {
                 Row(
@@ -139,10 +164,7 @@ fun Screen.SshScreen(serverId: String? = null) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "SSH Auth Method",
-                        color = onSurface
-                    )
+                    Text(text = "SSH Auth Method", color = MaterialTheme.colorScheme.onSurface)
                     ConnectedButtonGroup(
                         options = options,
                         selectedOption = loginState,
@@ -161,14 +183,39 @@ fun Screen.SshScreen(serverId: String? = null) {
                     )
                 } else {
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Text("FilePicker ${pathToFileState.text}", color = Color.Cyan)
                     }
                 }
+            }
+
+            item {
+                SettingOutlinedText(
+                    state = serverName,
+                    label = { Text("server displayed name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    isDone = true,
+                    onKeyboardAction = {
+                        screenModel.processIntent(SshIntent.Save)
+                    }
+                )
+
+            }
+
+            item {
+                Button(
+                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                    onClick = { screenModel.processIntent(SshIntent.Save) }
+                ) {
+                    Text("Save Server Configuration")
+                }
+            }
+
+
+            item {
+                Text("server id: ${state.serverId}\nserver name: ${state.name}\nserver ip: ${state.ip}\n server login: ${state.login}\nserver password: ${state.password}\nserver port: ${state.port}\n",  color = Color.Cyan)
             }
         }
     }

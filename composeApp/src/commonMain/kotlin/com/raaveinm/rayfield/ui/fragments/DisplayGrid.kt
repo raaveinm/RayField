@@ -35,6 +35,8 @@ import com.raaveinm.rayfield.ui.theme.LocalDimensions
     val windowSize = calculateWindowSize()
     val state = rememberLazyGridState()
 
+    val combinedServers = (serverList ?: emptyList())// + mockServers
+
     if (windowSize != WindowSize.COMPACT) {
         LazyHorizontalGrid(
             modifier = Modifier
@@ -46,7 +48,7 @@ import com.raaveinm.rayfield.ui.theme.LocalDimensions
             horizontalArrangement = Arrangement.spacedBy(dimen.sMediumPadding),
             verticalArrangement = Arrangement.spacedBy(dimen.sMediumPadding),
         ) {
-            items(mockServers) { server -> // TODO(REPLACE mock with actual data, passed via serverList)
+            items(combinedServers) { server ->
                 ServerInfoCard(
                     modifier = Modifier.wrapContentSize(),
                     server = server,
@@ -73,7 +75,7 @@ import com.raaveinm.rayfield.ui.theme.LocalDimensions
             horizontalArrangement = Arrangement.spacedBy(dimen.sMediumPadding),
             verticalArrangement = Arrangement.spacedBy(dimen.sMediumPadding),
         ) {
-            items(mockServers) { server -> // TODO(REPLACE mock with actual data, passed via serverList)
+            items(combinedServers) { server ->
                 ServerInfoCard(
                     modifier = Modifier.wrapContentSize(),
                     server = server,

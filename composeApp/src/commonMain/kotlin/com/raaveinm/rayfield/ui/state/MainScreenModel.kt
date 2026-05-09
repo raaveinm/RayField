@@ -8,12 +8,14 @@ import com.raaveinm.rayfield.data.xray.types.ServerState
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 
 class MainScreenModel(
     serverDao: ServerDao
 ) : ScreenModel {
 
     val serverStates: StateFlow<List<ServerState>> = serverDao.getAllServerStates()
+        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val serverUnits: StateFlow<List<ServerUnit>> = serverDao.getAllServerUnits()
         .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 }

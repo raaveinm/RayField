@@ -20,7 +20,11 @@ val commonModule = module {
     single { getRoomDatabase(get()) }
     single { get<AppDatabase>().serverDao() }
     factory { MainScreenModel(get()) }
-    factory { SshScreenModel(get()) }
-}
+    factory { (serverId: String?) ->
+        SshScreenModel(
+            serverDao = get(),
+            initialServerId = serverId
+        )
+    }}
 
 expect val platformModule: Module

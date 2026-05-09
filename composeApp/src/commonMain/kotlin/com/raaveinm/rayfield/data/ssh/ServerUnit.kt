@@ -1,7 +1,6 @@
 package com.raaveinm.rayfield.data.ssh
 
 import androidx.room3.Entity
-import androidx.room3.Ignore
 import androidx.room3.PrimaryKey
 
 @Entity(tableName = "server_units")
@@ -13,9 +12,8 @@ data class ServerUnit(
     val serverSshPassword: String?,
     val serverSshPrivateKey: String?,
     val serverSshPort: Int,
-    @Ignore val iconLocation: String? = null
+    val iconLocation: String? = null
     ) {
-    // Secondary constructor for Room
     constructor(
         serverId: String,
         serverName: String?,

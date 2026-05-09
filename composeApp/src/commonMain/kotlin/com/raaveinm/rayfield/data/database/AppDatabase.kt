@@ -8,7 +8,7 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.raaveinm.rayfield.data.ssh.ServerUnit
 import com.raaveinm.rayfield.data.xray.types.ServerState
 
-@Database(entities = [ServerUnit::class, ServerState::class], version = 1)
+@Database(entities = [ServerUnit::class, ServerState::class], version = 2)
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun serverDao(): ServerDao
