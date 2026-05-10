@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,11 +47,11 @@ import org.koin.core.parameter.parametersOf
 //
 
 @Composable
-fun Screen.SshScreen(serverId: String? = null) {
+fun Screen.SshScreen(configId: String? = null, serverId: String? = null) {
     val dimen = LocalDimensions.current
     val windowSize = LocalWindowSize.current
 
-    val screenModel = koinScreenModel<SshScreenModel> { parametersOf(serverId) }
+    val screenModel = koinScreenModel<SshScreenModel> { parametersOf(configId, serverId) }
     val state by screenModel.state.collectAsState()
 
     val globalBlurHolder = GlobalBlurHolder.current ?: rememberBlurHolder()
@@ -116,13 +117,16 @@ fun Screen.SshScreen(serverId: String? = null) {
             ),
         contentAlignment = Alignment.Center
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            state = lazyState,
-            contentPadding = padding,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        if (state.isLoading) {
+            CircularProgressIndicator()
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                state = lazyState,
+                contentPadding = padding,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -219,4 +223,5 @@ fun Screen.SshScreen(serverId: String? = null) {
             }
         }
     }
+}
 }

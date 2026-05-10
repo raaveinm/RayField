@@ -43,12 +43,20 @@ import io.github.neilyich.glassmorphism.rememberBlurHolder
 @Composable
 fun App(
     modifier: Modifier = Modifier,
-    blurHolder: BlurHolder = rememberBlurHolder()
+    blurHolder: BlurHolder = rememberBlurHolder(),
+    initialConfigId: String? = null,
+    initialServerId: String? = null
 ) {
     val searchState: SearchBarState = rememberSearchBarState()
     val textFieldState = rememberTextFieldState()
     val windowSize = calculateWindowSize()
     val backNavigator = remember { mutableStateOf<Navigator?>(null) }
+
+    val initialTab = if (initialConfigId != null || initialServerId != null) {
+        EditTab(configId = initialConfigId, serverId = initialServerId)
+    } else {
+        HomeTab
+    }
 
     CoilInitializer()
 
@@ -57,7 +65,7 @@ fun App(
         LocalBackNavigator provides backNavigator
     ) {
         Box(modifier = modifier) {
-            TabNavigator(HomeTab) { navigator ->
+            TabNavigator(initialTab) { navigator ->
                 Box(
                     modifier = Modifier.blurredContent(blurHolder)
                 ) { AnimatedTabTransition(navigator) }
@@ -93,7 +101,7 @@ fun App(
                     onHomeNavigation = { navigator.current = HomeTab },
                     onEditNavigation = { navigator.current = EditTab() },
                     onSettingsNavigation = { navigator.current = SettingsTab },
-                    onRawSshNavigation = { navigator.current = RawSshTab },
+                    onRawSshNavigation = { navigator.current = RawSshTab() },
                     onAddNewServerNavigation = { navigator.current = AddServerTab },
                     selectedDestination = navigator.current.tabIndex
                 )

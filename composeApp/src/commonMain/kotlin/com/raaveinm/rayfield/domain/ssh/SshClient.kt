@@ -1,8 +1,9 @@
 package com.raaveinm.rayfield.domain.ssh
 
-import com.raaveinm.rayfield.data.xray.types.CommandResult
+import com.raaveinm.rayfield.data.ssh.CommandResult
 
-interface SshClient {
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+expect class SshClient() {
     suspend fun connect (
         host: String,
         port: Int,

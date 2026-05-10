@@ -1,21 +1,17 @@
-package com.raaveinm.rayfield.domain
+package com.raaveinm.rayfield.domain.ssh
 
-import com.raaveinm.rayfield.data.xray.types.CommandResult
-import com.raaveinm.rayfield.domain.ssh.SshClient
+import com.raaveinm.rayfield.data.ssh.CommandResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier
 
-//
-// Created by Kirill "Raaveinm" on 4/29/26.
-//
-
-class SshClientAndroid : SshClient {
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+actual class SshClient {
 
     private var client: SSHClient? = null
 
-    override suspend fun connect(
+    actual suspend fun connect(
         host: String,
         port: Int,
         username: String,
@@ -43,7 +39,7 @@ class SshClientAndroid : SshClient {
         }
     }
 
-    override suspend fun execute(command: String): CommandResult = withContext(Dispatchers.IO) {
+    actual suspend fun execute(command: String): CommandResult = withContext(Dispatchers.IO) {
         val session = client?.startSession() ?: throw IllegalStateException("Client not connected")
 
         try {
@@ -64,7 +60,7 @@ class SshClientAndroid : SshClient {
         }
     }
 
-    override suspend fun disconnect(): Unit = withContext(Dispatchers.IO) {
+    actual suspend fun disconnect(): Unit = withContext(Dispatchers.IO) {
         try {
             client?.disconnect()
             client?.close()

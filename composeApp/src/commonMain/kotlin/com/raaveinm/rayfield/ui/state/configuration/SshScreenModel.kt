@@ -16,12 +16,14 @@ import kotlinx.coroutines.launch
 
 class SshScreenModel(
     val serverDao: ServerDao,
+    private val initialConfigId: String? = null,
     private val initialServerId: String? = null,
 ) : ScreenModel {
     private val _state = MutableStateFlow(
         SshDraftState(
             serverId = initialServerId ?: "",
-            isLoading = initialServerId != null
+            configId = initialConfigId ?: "",
+            isLoading = initialServerId != null || initialConfigId != null
         )
     )
     val state = _state.asStateFlow()
@@ -32,7 +34,28 @@ class SshScreenModel(
 
     init {
         screenModelScope.launch {
-            if (!initialServerId.isNullOrBlank()) {
+            if (!initialConfigId.isNullOrBlank()) {
+                val config = serverDao.getConfigById(initialConfigId)
+                if (config != null) {
+                    val server = serverDao.getServerUnitById(config.serverId)
+                    if (server != null) {
+                        _state.value = SshDraftState(
+                            serverId = server.serverId,
+                            configId = config.configId,
+                            name = server.serverName ?: "",
+                            ip = server.serverIp,
+                            login = server.serverSshLogin,
+                            password = server.serverSshPassword ?: "",
+                            port = server.serverSshPort.toString(),
+                            isLoading = false
+                        )
+                    } else {
+                        _state.update { it.copy(isLoading = false) }
+                    }
+                } else {
+                    _state.update { it.copy(isLoading = false) }
+                }
+            } else if (!initialServerId.isNullOrBlank()) {
                 val server = serverDao.getServerUnitById(initialServerId)
 
                 if (server == null) {

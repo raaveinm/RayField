@@ -50,16 +50,19 @@ object HomeTab : Tab {
     }
 }
 
-data class EditTab(val serverId: String? = null) : Tab {
+data class EditTab(
+    val configId: String? = null,
+    val serverId: String? = null
+) : Tab {
 
-    override val key: String = "EditTab_${serverId ?: "global_edit"}"
+    override val key: String = "EditTab_${configId ?: "none"}_${serverId ?: "none"}"
 
     override val options: TabOptions
         @Composable get() = TabOptions(index = 1u, title = "Edit")
 
     @Composable
     override fun Content() {
-        Navigator(EditScreen(serverId = serverId)) { navigator ->
+        Navigator(EditScreen(configId = configId, serverId = serverId)) { navigator ->
             val backNavState = LocalBackNavigator.current
             StatefulSlideTransition(navigator = navigator, backNavState = backNavState)
         }
@@ -79,13 +82,13 @@ object SettingsTab : Tab {
     }
 }
 
-object RawSshTab : Tab {
+data class RawSshTab(val serverId: String? = null) : Tab {
     override val options: TabOptions
         @Composable get() = TabOptions(index = 3u, title = "RawSshS")
 
     @Composable
     override fun Content() {
-        Navigator(RawSshScreen()) { navigator ->
+        Navigator(RawSshScreen(serverId = serverId)) { navigator ->
             val backNavState = LocalBackNavigator.current
             StatefulSlideTransition(navigator = navigator, backNavState = backNavState)
         }

@@ -20,12 +20,20 @@ class MainActivity : ComponentActivity() {
         Security.removeProvider("BC")
         Security.insertProviderAt(BouncyCastleProvider(), 1)
 
+        val data = intent?.data
+        val configId = data?.getQueryParameter("configId")
+        val serverId = data?.getQueryParameter("serverId")
+
         setContent {
             RayFieldTheme {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                 ) { innerPadding ->
-                    App(Modifier.fillMaxSize().padding(innerPadding))
+                    App(
+                        modifier = Modifier.fillMaxSize().padding(innerPadding),
+                        initialConfigId = configId,
+                        initialServerId = serverId
+                    )
                 }
             }
         }

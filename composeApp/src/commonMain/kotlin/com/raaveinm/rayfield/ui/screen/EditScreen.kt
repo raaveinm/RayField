@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -55,10 +53,11 @@ import io.github.neilyich.glassmorphism.rememberBlurHolder
 //
 
 data class EditScreen (
+    val configId: String? = null,
     val serverId: String? = null
 ) : Screen {
 
-    override val key: ScreenKey = "EditScreen:${serverId ?: "root"}"
+    override val key: ScreenKey = "EditScreen:${configId ?: "none"}:${serverId ?: "none"}"
 
     @Preview
     @Composable
@@ -81,14 +80,14 @@ data class EditScreen (
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            if (serverId == null) {
-                DisplayGrid(navigator, serverList)
+            if (serverId == null && configId == null) {
+                DisplayGrid(serverList, onClick = { navigator.push(EditScreen(serverId = it.serverId)) })
                 return@Box
             }
 
             val windowSize = LocalWindowSize.current
             val scrollState = rememberScrollState()
-            val tabs = listOf(SshTab(serverId), InboundTab, StreamTab, OutboundTab, ProTab)
+            val tabs = listOf(SshTab(configId, serverId), InboundTab, StreamTab, OutboundTab, ProTab)
 
             val padding = PaddingValues(
                 top = dimen.sMediumMargin,

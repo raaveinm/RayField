@@ -18,4 +18,6 @@ class MainScreenModel(
 
     val serverUnits: StateFlow<List<ServerUnit>> = serverDao.getAllServerUnits()
         .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun getServerById(serverId: String): ServerUnit? = serverUnits.value.find { it.serverId == serverId }
 }

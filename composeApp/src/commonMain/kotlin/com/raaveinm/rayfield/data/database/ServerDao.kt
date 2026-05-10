@@ -32,6 +32,9 @@ interface ServerDao {
     @Query("SELECT * FROM server_states WHERE serverId = :serverId")
     fun getServerStatesForServer(serverId: String): Flow<List<ServerState>>
 
+    @Query("SELECT * FROM server_states WHERE configId = :id")
+    suspend fun getConfigById(id: String): ServerState?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertServerState(state: ServerState)
 
