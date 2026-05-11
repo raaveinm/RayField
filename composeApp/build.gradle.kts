@@ -122,6 +122,17 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "com.raaveinm.rayfield"
             packageVersion = "1.0.0"
+
+            macOS {
+                dockName = libs.versions.app.name.get()
+                iconFile.set(project.file("src/media/appicon/rayfield.icns"))
+            }
+            linux {
+                iconFile.set(project.file("src/media/appicon/icon.png"))
+            }
+            windows {
+                iconFile.set(project.file("src/media/appicon/icon.png"))
+            }
         }
     }
 }

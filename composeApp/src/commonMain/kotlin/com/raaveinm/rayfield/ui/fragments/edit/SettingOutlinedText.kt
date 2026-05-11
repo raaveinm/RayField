@@ -1,4 +1,4 @@
-package com.raaveinm.rayfield.ui.fragments
+package com.raaveinm.rayfield.ui.fragments.edit
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Row

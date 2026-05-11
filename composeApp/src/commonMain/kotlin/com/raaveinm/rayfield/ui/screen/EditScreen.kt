@@ -3,21 +3,35 @@ package com.raaveinm.rayfield.ui.screen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,9 +46,9 @@ import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.TabNavigator
-import com.raaveinm.rayfield.domain.helpers.LocalWindowSize
-import com.raaveinm.rayfield.domain.helpers.WindowSize
+import com.raaveinm.rayfield.ui.adapters.AdaptivePadding.adaptiveAll
 import com.raaveinm.rayfield.ui.animations.AnimatedTabTransition
+import com.raaveinm.rayfield.ui.fragments.ConnectionInfoCard
 import com.raaveinm.rayfield.ui.fragments.DisplayGrid
 import com.raaveinm.rayfield.ui.navigation.InboundTab
 import com.raaveinm.rayfield.ui.navigation.OutboundTab
@@ -75,39 +89,100 @@ data class EditScreen (
         val onInvertSurface = MaterialTheme.colorScheme.surface.copy(alpha = .84f)
         val primary = MaterialTheme.colorScheme.primary
         val onSurface = MaterialTheme.colorScheme.onSurface
+        val primaryContainer = MaterialTheme.colorScheme.primaryContainer
 
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             if (serverId == null && configId == null) {
-                DisplayGrid(serverList, onClick = { navigator.push(EditScreen(serverId = it.serverId)) })
+                var showPreciser by remember { mutableStateOf(false) }
+                var selectedServerId by remember { mutableStateOf<String?>(null) }
+                val connectionList by remember(selectedServerId) {
+                    screenModel.getServerStatesForServer(serverId = selectedServerId ?: "")
+                }.collectAsState(emptyList())
+
+                DisplayGrid(
+                    modifier = Modifier.blurredContent(localBlurHolder),
+                    serverList = serverList,
+                    onClick = {
+                        selectedServerId = it.serverId
+                        if (connectionList.isEmpty()){
+                            navigator.push(EditScreen(serverId = selectedServerId))
+                        }
+                        showPreciser = !showPreciser
+                })
+                if (showPreciser) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .blurredBackground(
+                                blurHolder = localBlurHolder,
+                                blurRadius = 8.dp,
+                                tileMode = TileMode.Decal)
+                            .background(surfaceVariant.copy(alpha = .5f))
+                            .clickable{ showPreciser = false }
+                            .padding(adaptiveAll),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        LazyVerticalGrid(
+                            columns = GridCells.Adaptive(minSize = 360.dp),
+                            state = rememberLazyGridState(),
+                            horizontalArrangement = Arrangement.spacedBy(dimen.mediumPadding),
+                            verticalArrangement = Arrangement.spacedBy(dimen.mediumPadding)
+                        ) {
+                            items(connectionList) { serverState ->
+                                ConnectionInfoCard(
+                                    serverState = serverState,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    followingIcon = {
+                                        IconButton(onClick = {
+                                            navigator.push(
+                                                EditScreen(
+                                                    serverId = serverState.serverId,
+                                                    configId = serverState.configId
+                                                )
+                                            )
+                                        }) {
+                                            Icon(
+                                                imageVector = Icons.Outlined.Edit,
+                                                contentDescription = "edit_server_button"
+                                            )
+                                        }
+                                    }
+                                )
+                            }
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .clip(MaterialTheme.shapes.medium)
+                                        .background(primaryContainer)
+                                        .clickable{
+                                            navigator.push(EditScreen(serverId = selectedServerId)) },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Add,
+                                        tint = onSurface,
+                                        modifier = Modifier.size(32.dp),
+                                        contentDescription = "edit_server_button"
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
                 return@Box
             }
 
-            val windowSize = LocalWindowSize.current
             val scrollState = rememberScrollState()
-            val tabs = listOf(SshTab(configId, serverId), InboundTab, StreamTab, OutboundTab, ProTab)
-
-            val padding = PaddingValues(
-                top = dimen.sMediumMargin,
-                bottom = dimen.sMediumMargin,
-                start = when (windowSize) {
-                    WindowSize.EXPANDED -> dimen.sMediumMargin
-                    WindowSize.MEDIUM -> dimen.extraSmallMargin
-                    else -> dimen.mediumPadding
-                },
-                end = when (windowSize) {
-                    WindowSize.EXPANDED -> dimen.sMediumMargin
-                    WindowSize.MEDIUM -> dimen.extraSmallMargin
-                    else -> dimen.mediumPadding
-                }
-            )
+            val tabs = listOf(SshTab(serverId, configId), InboundTab(configId), StreamTab, OutboundTab, ProTab)
 
             TabNavigator(tabs.first()) { tabNavigator ->
                 Box(
                     modifier = Modifier
-                        .padding(padding)
+                        .padding(adaptiveAll)
                         .clip(RoundedCornerShape(24.dp))
                         .shadow(8.dp)
                         .blurredBackground(

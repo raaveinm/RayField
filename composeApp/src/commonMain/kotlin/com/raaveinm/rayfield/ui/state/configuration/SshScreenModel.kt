@@ -16,8 +16,8 @@ import kotlinx.coroutines.launch
 
 class SshScreenModel(
     val serverDao: ServerDao,
-    private val initialConfigId: String? = null,
     private val initialServerId: String? = null,
+    private val initialConfigId: String? = null,
 ) : ScreenModel {
     private val _state = MutableStateFlow(
         SshDraftState(
@@ -109,7 +109,7 @@ class SshScreenModel(
             serverSshPassword = currentState.password,
             serverSshPort = currentState.port.toIntOrNull() ?: 22,
             serverSshPrivateKey = currentState.pathToPkey,
-            iconLocation = flags.random() //TODO(replace with picker)
+            iconLocation = flags.random() // TODO(replace with picker)
         )
 
         screenModelScope.launch {

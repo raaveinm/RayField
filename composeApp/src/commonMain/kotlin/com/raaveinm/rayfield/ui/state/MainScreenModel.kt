@@ -10,13 +10,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 
 class MainScreenModel(
-    serverDao: ServerDao
+    private val serverDao: ServerDao
 ) : ScreenModel {
 
     val serverStates: StateFlow<List<ServerState>> = serverDao.getAllServerStates()
         .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val serverUnits: StateFlow<List<ServerUnit>> = serverDao.getAllServerUnits()
+        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun getServerStatesForServer(serverId: String): StateFlow<List<ServerState>> = serverDao.getServerStatesForServer(serverId)
         .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun getServerById(serverId: String): ServerUnit? = serverUnits.value.find { it.serverId == serverId }

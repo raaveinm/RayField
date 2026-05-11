@@ -2,7 +2,6 @@ package com.raaveinm.rayfield.ui.screen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -19,8 +18,7 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
-import com.raaveinm.rayfield.domain.helpers.LocalWindowSize
-import com.raaveinm.rayfield.domain.helpers.WindowSize
+import com.raaveinm.rayfield.ui.adapters.AdaptivePadding.adaptiveCompact
 import com.raaveinm.rayfield.ui.fragments.ConnectionInfoCard
 import com.raaveinm.rayfield.ui.mock.mockList
 import com.raaveinm.rayfield.ui.navigation.EditTab
@@ -39,23 +37,13 @@ class MainScreen : Screen {
         val navigator = LocalTabNavigator.current
         val state = rememberLazyGridState()
         val dimen = LocalDimensions.current
-        val windowSize = LocalWindowSize.current
         val mediumPadding = dimen.mediumPadding // 16.dp
-
-        val padding = PaddingValues(
-            top = dimen.sMediumMargin,
-            bottom = dimen.mediumMargin,
-            start = if (windowSize != WindowSize.COMPACT) dimen.extraSmallMargin
-            else dimen.mediumPadding,
-            end = if (windowSize != WindowSize.COMPACT) dimen.extraSmallMargin
-            else dimen.mediumPadding
-        )
 
         Column(modifier = Modifier.fillMaxSize()) {
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 360.dp),
                 state = state,
-                contentPadding = padding,
+                contentPadding = adaptiveCompact,
                 horizontalArrangement = Arrangement.spacedBy(mediumPadding),
                 verticalArrangement = Arrangement.spacedBy(mediumPadding),
                 modifier = Modifier.fillMaxSize()

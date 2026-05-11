@@ -12,7 +12,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ServerDao {
+    ///////////////////////////////////////////////
     // ServerUnit operations
+    ///////////////////////////////////////////////
     @Query("SELECT * FROM server_units")
     fun getAllServerUnits(): Flow<List<ServerUnit>>
 
@@ -25,7 +27,9 @@ interface ServerDao {
     @Query("SELECT * FROM server_units WHERE serverId = :id")
     suspend fun getServerUnitById(id: String): ServerUnit?
 
+    ///////////////////////////////////////////////
     // ServerState operations
+    ///////////////////////////////////////////////
     @Query("SELECT * FROM server_states")
     fun getAllServerStates(): Flow<List<ServerState>>
 

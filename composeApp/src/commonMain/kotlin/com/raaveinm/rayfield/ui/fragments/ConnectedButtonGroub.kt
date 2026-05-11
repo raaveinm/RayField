@@ -11,8 +11,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.raaveinm.rayfield.ui.theme.LocalDimensions
 
@@ -80,4 +85,16 @@ fun ConnectedButtonGroup(
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun ConnectedButtonGroupPreview() {
+    val options = listOf("rrr", "fff", "sss", "eee")
+    var selectedOption by remember { mutableStateOf(options[0]) }
+    ConnectedButtonGroup(
+        options = options,
+        selectedOption = selectedOption,
+        onOptionSelected = { selectedOption = it }
+    )
 }

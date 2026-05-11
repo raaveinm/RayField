@@ -39,4 +39,4 @@ data class ServerState(
         protocol: String,
         jsonSettings: String
     ) : this(configId, serverId, connectionName, serverAddress, sharedLink, null, protocol, jsonSettings)
-    }
+}

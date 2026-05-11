@@ -27,6 +27,7 @@ import com.raaveinm.rayfield.ui.theme.LocalDimensions
 
 
 @Composable fun DisplayGrid(
+    modifier: Modifier = Modifier,
     serverList: List<ServerUnit>? = null,
     onClick: (ServerUnit) -> Unit = {},
     onLongClick: (ServerUnit) -> Unit = {}
@@ -39,7 +40,7 @@ import com.raaveinm.rayfield.ui.theme.LocalDimensions
 
     if (windowSize != WindowSize.COMPACT) {
         LazyHorizontalGrid(
-            modifier = Modifier
+            modifier = modifier
                 .horizontalMouseScroll(state)
                 .wrapContentSize()
                 .height((158 * 2).dp + dimen.sMediumPadding),

@@ -14,7 +14,6 @@ import kotlinx.coroutines.withContext
 class RawSshScreenModel(
     private val sshClient: SshClient
 ) : ScreenModel {
-    // В ScreenModel
     val history = mutableStateListOf<ConsoleMessage>()
 
     fun connect(server: ServerUnit?) {

@@ -2,7 +2,6 @@ package com.raaveinm.rayfield.ui.screen.edit
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,15 +28,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
-import com.raaveinm.rayfield.domain.helpers.LocalWindowSize
-import com.raaveinm.rayfield.domain.helpers.WindowSize
+import com.raaveinm.rayfield.ui.adapters.AdaptivePadding
 import com.raaveinm.rayfield.ui.adapters.IpAutoFormatTransformation
 import com.raaveinm.rayfield.ui.fragments.ConnectedButtonGroup
-import com.raaveinm.rayfield.ui.fragments.SettingOutlinedText
+import com.raaveinm.rayfield.ui.fragments.edit.SettingOutlinedText
 import com.raaveinm.rayfield.ui.state.GlobalBlurHolder
 import com.raaveinm.rayfield.ui.state.configuration.SshIntent
 import com.raaveinm.rayfield.ui.state.configuration.SshScreenModel
-import com.raaveinm.rayfield.ui.theme.LocalDimensions
 import io.github.neilyich.glassmorphism.blurredBackground
 import io.github.neilyich.glassmorphism.rememberBlurHolder
 import org.koin.core.parameter.parametersOf
@@ -47,11 +44,8 @@ import org.koin.core.parameter.parametersOf
 //
 
 @Composable
-fun Screen.SshScreen(configId: String? = null, serverId: String? = null) {
-    val dimen = LocalDimensions.current
-    val windowSize = LocalWindowSize.current
-
-    val screenModel = koinScreenModel<SshScreenModel> { parametersOf(configId, serverId) }
+fun Screen.SshScreen(serverId: String? = null, configId: String? = null) {
+    val screenModel = koinScreenModel<SshScreenModel> { parametersOf(serverId, configId) }
     val state by screenModel.state.collectAsState()
 
     val globalBlurHolder = GlobalBlurHolder.current ?: rememberBlurHolder()
@@ -97,16 +91,6 @@ fun Screen.SshScreen(configId: String? = null, serverId: String? = null) {
         if (!state.isLoading) screenModel.processIntent(SshIntent.UpdateName(serverName.text.toString()))
     }
 
-
-    val padding = PaddingValues(
-        vertical = dimen.smallMargin,
-        horizontal = when(windowSize){
-            WindowSize.EXPANDED -> dimen.sMediumMargin
-            WindowSize.MEDIUM -> dimen.extraSmallMargin
-            WindowSize.COMPACT -> dimen.smallSize
-        }
-    )
-
     Box(
         Modifier
             .fillMaxSize()
@@ -123,7 +107,7 @@ fun Screen.SshScreen(configId: String? = null, serverId: String? = null) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 state = lazyState,
-                contentPadding = padding,
+                contentPadding = AdaptivePadding.adaptiveAll,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -219,7 +203,9 @@ fun Screen.SshScreen(configId: String? = null, serverId: String? = null) {
 
 
             item {
-                Text("server id: ${state.serverId}\nserver name: ${state.name}\nserver ip: ${state.ip}\n server login: ${state.login}\nserver password: ${state.password}\nserver port: ${state.port}\n",  color = Color.Cyan)
+                Text("server id: ${state.serverId}\nserver name: ${state.name}\nserver ip: " +
+                        "${state.ip}\n server login: ${state.login}\nserver password: " +
+                        "${state.password}\nserver port: ${state.port}\n",  color = Color.Cyan)
             }
         }
     }

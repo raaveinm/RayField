@@ -20,23 +20,25 @@ import com.raaveinm.rayfield.ui.screen.edit.StreamScreen
 //
 
 data class SshTab(
-    val configId: String? = null,
-    val serverId: String? = null
+    val serverId: String? = null,
+    val configId: String? = null
 ) : Tab {
     override val options: TabOptions
         @Composable get() = TabOptions(index = 0u, title = "SSH")
     @Composable
     override fun Content() {
-        SshScreen(configId, serverId)
+        SshScreen(serverId, configId)
     }
 }
 
-object InboundTab : Tab {
+data class InboundTab(
+    val configId: String? = null
+) : Tab {
     override val options: TabOptions
         @Composable get() = TabOptions(index = 1u, title = "Inbound")
     @Composable
     override fun Content() {
-        InboundScreen()
+        InboundScreen(configId)
     }
 }
 

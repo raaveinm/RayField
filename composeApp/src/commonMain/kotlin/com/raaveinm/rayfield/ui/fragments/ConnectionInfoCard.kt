@@ -44,6 +44,7 @@ import com.raaveinm.rayfield.ui.theme.LocalDimensions
 fun ConnectionInfoCard(
     modifier: Modifier = Modifier,
     serverState: ServerState,
+    followingIcon: (@Composable () -> Unit)? = null,
     onCopyClick: (text: String) -> Unit = {},
     onQrClick: () -> Unit = {},
     onShareClick: () -> Unit = {},
@@ -124,18 +125,20 @@ fun ConnectionInfoCard(
                     )
                 }
 
-                IconButton(
-                    onClick = { isExpanded = !isExpanded },
-                    colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Transparent)
-                ) {
-                    Icon(
-                        imageVector = if (isExpanded) Icons.Filled.KeyboardArrowUp
-                        else Icons.Outlined.KeyboardArrowDown,
-                        contentDescription = "expand_card_button",
-                        modifier = Modifier.size(dimensions.mediumSize),
-                        tint = onContainerColor
-                    )
-                }
+                if (followingIcon == null) {
+                    IconButton(
+                        onClick = { isExpanded = !isExpanded },
+                        colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Transparent)
+                    ) {
+                        Icon(
+                            imageVector = if (isExpanded) Icons.Filled.KeyboardArrowUp
+                            else Icons.Outlined.KeyboardArrowDown,
+                            contentDescription = "expand_card_button",
+                            modifier = Modifier.size(dimensions.mediumSize),
+                            tint = onContainerColor
+                        )
+                    }
+                } else followingIcon()
             }
 
             ///////////////////////////////////////////////

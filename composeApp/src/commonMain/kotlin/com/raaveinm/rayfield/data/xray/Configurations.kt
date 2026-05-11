@@ -62,7 +62,6 @@ object Configurations {
         @SerialName("trojan") TROJAN,
         @SerialName("shadowsocks") SHADOWSOCKS,
         @SerialName("socks") SOCKS,
-        @SerialName("dokodemo-door") DOKODEMO_DOOR,
         @SerialName("dns") DNS,
         @SerialName("wireguard") WIREGUARD,
         @SerialName("hysteria") HYSTERIA,

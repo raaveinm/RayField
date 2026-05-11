@@ -3,7 +3,6 @@ package com.raaveinm.rayfield.ui.screen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,7 +14,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -42,7 +40,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.raaveinm.rayfield.data.ssh.ConsoleMessageType
 import com.raaveinm.rayfield.domain.helpers.LocalWindowSize
-import com.raaveinm.rayfield.domain.helpers.WindowSize
+import com.raaveinm.rayfield.ui.adapters.AdaptivePadding.adaptiveAll
 import com.raaveinm.rayfield.ui.fragments.DisplayGrid
 import com.raaveinm.rayfield.ui.state.GlobalBlurHolder
 import com.raaveinm.rayfield.ui.state.MainScreenModel
@@ -64,7 +62,6 @@ data class RawSshScreen(val serverId: String? = null) : Screen {
         val globalBlurHolder = GlobalBlurHolder.current ?: rememberBlurHolder()
         val navigator = LocalNavigator.currentOrThrow
         val dimen = LocalDimensions.current
-        val windowSize = LocalWindowSize.current
 
         val surfaceVariant = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.84f)
         val onInvertSurface = MaterialTheme.colorScheme.surface.copy(alpha = .84f)
@@ -74,27 +71,12 @@ data class RawSshScreen(val serverId: String? = null) : Screen {
         var inputText by remember { mutableStateOf("") }
         val listState = rememberLazyListState()
 
-        val padding = PaddingValues(
-            top = dimen.sMediumMargin,
-            bottom = dimen.sMediumMargin,
-            start = when (windowSize) {
-                WindowSize.EXPANDED -> dimen.sMediumMargin
-                WindowSize.MEDIUM -> dimen.extraSmallMargin
-                else -> dimen.mediumPadding
-            },
-            end = when (windowSize) {
-                WindowSize.EXPANDED -> dimen.sMediumMargin
-                WindowSize.MEDIUM -> dimen.extraSmallMargin
-                else -> dimen.mediumPadding
-            }
-        )
-
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             if (serverId == null) {
-                DisplayGrid(serverList, onClick = { navigator.push(RawSshScreen(serverId = it.serverId)) })
+                DisplayGrid(serverList = serverList, onClick = { navigator.push(RawSshScreen(serverId = it.serverId)) })
                 return@Box
             }
 
@@ -103,7 +85,7 @@ data class RawSshScreen(val serverId: String? = null) : Screen {
 
             Column (
                 modifier = Modifier
-                    .padding(padding)
+                    .padding(adaptiveAll)
                     .clip(RoundedCornerShape(24.dp))
                     .shadow(8.dp)
                     .blurredBackground(
