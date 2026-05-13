@@ -1,5 +1,6 @@
 package com.raaveinm.rayfield.ui.fragments.edit
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.rememberScrollState
@@ -51,7 +52,8 @@ fun SettingOutlinedText(
     inputTransformation: InputTransformation? = null,
     outputTransformation: OutputTransformation? = null,
     isPassword: Boolean = false,
-    onKeyboardAction: KeyboardActionHandler? = null
+    onKeyboardAction: KeyboardActionHandler? = null,
+    trailingIcon: @Composable (() -> Unit)? = null
 ) {
     val scrollState = rememberScrollState()
 
@@ -61,7 +63,7 @@ fun SettingOutlinedText(
     )
 
     if (isPassword) {
-        PasswordTextField(state = state, modifier = modifier)
+        PasswordTextField(state = state, modifier = modifier, trailingIcon = trailingIcon)
         return
     }
 
@@ -71,7 +73,8 @@ fun SettingOutlinedText(
         label = { label() },
         trailingIcon = {
             Row {
-                if (state.text.isNotEmpty()) {
+                trailingIcon?.invoke()
+                AnimatedVisibility(state.text.isNotEmpty()) {
                     IconButton(
                         onClick = { state.edit { delete(0, length) } }
                     ) {
@@ -97,9 +100,11 @@ fun SettingOutlinedText(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PasswordTextField(
+fun PasswordTextField(
     modifier: Modifier = Modifier,
-    state: TextFieldState
+    state: TextFieldState,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    label: @Composable (() -> Unit)? = null
 ) {
     var showPassword by remember { mutableStateOf(false) }
     val interactionSource = remember { MutableInteractionSource() }
@@ -124,16 +129,30 @@ private fun PasswordTextField(
                 singleLine = true,
                 visualTransformation = VisualTransformation.None,
                 interactionSource = interactionSource,
+                label = label,
                 trailingIcon = {
-                    IconButton(onClick = { showPassword = !showPassword }) {
-                        Icon(
-                            imageVector =
-                                if (showPassword) Icons.Filled.Visibility
-                                else Icons.Filled.VisibilityOff,
-                            contentDescription =
-                                if (showPassword) "Hide password"
-                                else "Show password"
-                        )
+                    Row {
+                        trailingIcon?.invoke()
+                        IconButton(onClick = { showPassword = !showPassword }) {
+                            Icon(
+                                imageVector =
+                                    if (showPassword) Icons.Filled.Visibility
+                                    else Icons.Filled.VisibilityOff,
+                                contentDescription =
+                                    if (showPassword) "Hide password"
+                                    else "Show password"
+                            )
+                        }
+                        AnimatedVisibility(state.text.isNotEmpty()) {
+                            IconButton(
+                                onClick = { state.edit { delete(0, length) } }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "ClearText",
+                                )
+                            }
+                        }
                     }
                 },
                 colors = OutlinedTextFieldDefaults.colors(),

@@ -7,7 +7,10 @@ import com.raaveinm.rayfield.data.xray.Configurations
 //
 
 data class EditDraftState (
+    val configId: String,
     val connectionName: String,
+    val serverId: String,
+    val serverAddress: String = "",
     val inbound: InboundDraftState,
     val stream: StreamDraftState,
     val outbound: OutboundDraftState,
@@ -25,7 +28,7 @@ data class InboundDraftState(
     val shadowsocksPassword: String? = null,
     val trojanPassword: String? = null,
     val vmessAlterId: Int? = null,
-    val fallbackDest: Int? = null
+    val fallbackDest: Int
 )
 data class StreamDraftState(
     val streamNetwork: Configurations.network,
@@ -71,6 +74,7 @@ data class ProDraftState(
 
 sealed interface EditIntent {
     data class UpdateName(val name: String) : EditIntent
+    object Save : EditIntent
 
     // --- Bulk Updates ---
     data class UpdateInbound(val inbound: InboundDraftState) : EditIntent
@@ -87,7 +91,7 @@ sealed interface EditIntent {
     data class UpdateShadowsocksPassword(val password: String?) : EditIntent
     data class UpdateTrojanPassword(val password: String?) : EditIntent
     data class UpdateVmessAlterId(val alterId: Int?) : EditIntent
-    data class UpdateFallbackDest(val dest: Int?) : EditIntent
+    data class UpdateFallbackDest(val dest: Int) : EditIntent
 
     // --- Stream Granular Updates ---
     data class UpdateStreamNetwork(val network: Configurations.network) : EditIntent

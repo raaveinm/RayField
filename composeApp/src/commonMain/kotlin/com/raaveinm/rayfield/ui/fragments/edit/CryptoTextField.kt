@@ -1,12 +1,11 @@
 package com.raaveinm.rayfield.ui.fragments.edit
 
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.GeneratingTokens
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import io.ktor.websocket.Frame
@@ -17,26 +16,23 @@ import io.ktor.websocket.Frame
 
 @Composable
 fun CryptoTextField(
+    state: TextFieldState,
     label: String,
-    value: String,
-    onValueChange: (String) -> Unit,
     onGenerateClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
+    PasswordTextField(
+        state = state,
         label = { Frame.Text(label) },
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
         trailingIcon = {
             IconButton(onClick = onGenerateClick) {
                 Icon(
-                    imageVector = Icons.Default.Refresh,
+                    imageVector = Icons.Filled.GeneratingTokens,
                     contentDescription = "Generate new $label",
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
-        },
-        singleLine = true
+        }
     )
 }

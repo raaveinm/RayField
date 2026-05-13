@@ -33,7 +33,6 @@ import com.raaveinm.rayfield.ui.navigation.LocalBackNavigator
 import com.raaveinm.rayfield.ui.navigation.RawSshTab
 import com.raaveinm.rayfield.ui.navigation.SettingsTab
 import com.raaveinm.rayfield.ui.navigation.tabIndex
-import com.raaveinm.rayfield.ui.state.GlobalBlurHolder
 import com.raaveinm.rayfield.ui.theme.LocalDimensions
 import io.github.neilyich.glassmorphism.BlurHolder
 import io.github.neilyich.glassmorphism.blurredContent
@@ -54,9 +53,7 @@ fun App(
 
     val initialTab = if (initialConfigId != null || initialServerId != null) {
         EditTab(configId = initialConfigId, serverId = initialServerId)
-    } else {
-        HomeTab
-    }
+    } else { HomeTab }
 
     CoilInitializer()
 

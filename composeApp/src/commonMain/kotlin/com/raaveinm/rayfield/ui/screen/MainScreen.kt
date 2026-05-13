@@ -48,7 +48,7 @@ class MainScreen : Screen {
                 verticalArrangement = Arrangement.spacedBy(mediumPadding),
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(mockList) { serverState -> // TODO (serverState to read from db)
+                items(serverStates) { serverState -> // TODO (serverState to read from db)
                     ConnectionInfoCard(
                         serverState = serverState,
                         modifier = Modifier.fillMaxWidth(),

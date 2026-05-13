@@ -37,7 +37,8 @@ val commonModule = module {
         EditScreenModel(
             serverDao = get(),
             cypherService = get(),
-            initialConfigId = params.values.getOrNull(0) as? String
+            initialConfigId = params.values.getOrNull(0) as? String,
+            initialServerId = params.values.getOrNull(1) as? String
         )}
 }
 

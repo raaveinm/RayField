@@ -3,14 +3,19 @@ package com.raaveinm.rayfield.ui.state.configuration
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.raaveinm.rayfield.data.database.ServerDao
+import com.raaveinm.rayfield.data.xray.Configurations
+import com.raaveinm.rayfield.data.xray.XrayConfig
+import com.raaveinm.rayfield.data.xray.types.ServerState
+import com.raaveinm.rayfield.domain.helpers.Logger
+import com.raaveinm.rayfield.domain.xray.CypherService
+import com.raaveinm.rayfield.domain.xray.ShareLinkGenerator
+import com.raaveinm.rayfield.domain.xray.XrayConfigBuilder
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import com.raaveinm.rayfield.domain.xray.CypherService
-import com.raaveinm.rayfield.data.xray.Configurations
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.decodeFromJsonElement
 
 //
 // Created by Kirill "Raaveinm" on 5/11/26.
@@ -19,16 +24,21 @@ import kotlinx.coroutines.launch
 class EditScreenModel(
     val serverDao: ServerDao,
     private val cypherService: CypherService,
-    private val initialConfigId: String? = null
+    private val initialConfigId: String? = null,
+    private val initialServerId: String? = null
 ) : ScreenModel {
     private val _state = MutableStateFlow(
         EditDraftState(
+            configId = initialConfigId ?: "",
             connectionName = "",
+            serverId = initialServerId ?: "",
+            serverAddress = "",
             inbound = InboundDraftState(
                 inboundProtocol = Configurations.protocol.VLESS,
                 inboundPort = 443,
                 inboundListen = "0.0.0.0",
-                inboundId = ""
+                inboundId = "",
+                fallbackDest = 8080
             ),
             stream = StreamDraftState(
                 streamNetwork = Configurations.network.TCP,
@@ -53,7 +63,7 @@ class EditScreenModel(
                 enableIp = false,
                 enableMetrics = false
             ),
-            isLoading = initialConfigId != null
+            isLoading = initialConfigId != null || initialServerId != null
         )
     )
     val state = _state.asStateFlow()
@@ -64,17 +74,111 @@ class EditScreenModel(
     var shortId = MutableStateFlow("")
 
     init {
-        if (initialConfigId == null)
-            initNewConfig()
-
         screenModelScope.launch {
             if (!initialConfigId.isNullOrBlank()) {
-                val config = serverDao.getConfigById(initialConfigId)
-                if (config != null) {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        // TODO(deserialize config)
+                val serverStateEntity = serverDao.getConfigById(initialConfigId)
+                if (serverStateEntity != null) {
+                    _state.update { it.copy(
+                        serverId = serverStateEntity.serverId,
+                        serverAddress = serverStateEntity.serverAddress,
+                        connectionName = serverStateEntity.connectionName ?: ""
+                    ) }
+                    try {
+                        val xrayConfig = XrayConfigBuilder.parseJson(serverStateEntity.jsonSettings)
+                        val inbound = xrayConfig.inbounds.firstOrNull()
+                        val outbound = xrayConfig.outbounds.firstOrNull()
+                        val stream = inbound?.streamSettings
+
+                        val json = XrayConfigBuilder.jsonFormatter
+
+                        val inboundDraft = inbound?.let { ib ->
+                            val settings = when (ib.protocol) {
+                                Configurations.protocol.VLESS -> json.decodeFromJsonElement<XrayConfig.VlessInboundSettings>(ib.settings)
+                                Configurations.protocol.VMESS -> json.decodeFromJsonElement<XrayConfig.VMessInboundSettings>(ib.settings)
+                                Configurations.protocol.TROJAN -> json.decodeFromJsonElement<XrayConfig.TrojanInboundSettings>(ib.settings)
+                                Configurations.protocol.SHADOWSOCKS -> json.decodeFromJsonElement<XrayConfig.ShadowsocksInboundSettings>(ib.settings)
+                                else -> null
+                            }
+
+                            val clientId = when (settings) {
+                                is XrayConfig.VlessInboundSettings -> settings.clients.firstOrNull()?.id
+                                is XrayConfig.VMessInboundSettings -> settings.clients.firstOrNull()?.id
+                                else -> null
+                            }
+
+                            InboundDraftState(
+                                inboundProtocol = ib.protocol,
+                                inboundPort = ib.port,
+                                inboundListen = ib.listen,
+                                inboundId = clientId ?: "",
+                                vmessAlterId = (settings as? XrayConfig.VMessInboundSettings)?.clients?.firstOrNull()?.alterId,
+                                shadowsocksMethod = (settings as? XrayConfig.ShadowsocksInboundSettings)?.method?.let { m ->
+                                    Configurations.shadowsocksMethod.entries.find { it.name.lowercase().replace("_", "-") == m }
+                                },
+                                shadowsocksPassword = (settings as? XrayConfig.ShadowsocksInboundSettings)?.password,
+                                trojanPassword = (settings as? XrayConfig.TrojanInboundSettings)?.clients?.firstOrNull()?.password,
+                                fallbackDest = (settings as? XrayConfig.VlessInboundSettings)?.fallbacks?.firstOrNull()?.dest?.toIntOrNull() ?: 8080
+                            )
+                        } ?: _state.value.inbound
+
+                        val streamDraft = stream?.let { s ->
+                            StreamDraftState(
+                                streamNetwork = s.network ?: Configurations.network.TCP,
+                                streamSecurity = s.security ?: Configurations.security.NONE,
+                                wsPath = s.wsSettings?.path,
+                                wsHost = s.wsSettings?.headers?.get("Host"),
+                                grpcServiceName = s.grpcSettings?.serviceName,
+                                kcpSeed = s.kcpSettings?.seed,
+                                sniDest = s.realitySettings?.dest,
+                                tlsMinVersion = s.tlsSettings?.minVersion,
+                                tlsAlpn = s.tlsSettings?.alpn,
+                                tlsFingerprint = s.tlsSettings?.fingerprint,
+                                realityPublicKey = "", // Server config doesn't have public key
+                                realityPrivateKey = s.realitySettings?.privateKey,
+                                realityShortId = s.realitySettings?.shortIds?.firstOrNull(),
+                                realitySpiderX = s.realitySettings?.spiderX
+                            )
+                        } ?: _state.value.stream
+
+                        val outboundDraft = outbound?.let { ob ->
+                            OutboundDraftState(
+                                outboundType = ob.protocol,
+                                domainStrategy = xrayConfig.routing?.domainStrategy
+                            )
+                        } ?: _state.value.outbound
+
+                        _state.update {
+                            it.copy(
+                                connectionName = serverStateEntity.connectionName ?: "",
+                                inbound = inboundDraft,
+                                stream = streamDraft,
+                                outbound = outboundDraft,
+                                pro = it.pro.copy(
+                                    blockAds = xrayConfig.routing?.rules?.any { rule -> rule.domain?.contains("geosite:category-ads-all") == true } ?: false,
+                                    logLevel = xrayConfig.log?.loglevel ?: Configurations.loglevel.WARNING,
+                                    sniffingEnabled = inbound?.sniffing?.enabled ?: true
+                                ),
+                                isLoading = false
+                            )
+                        }
+                    } catch (e: Exception) {
+                        _state.update {
+                            Logger.e("EditScreenModel", e.message ?: "Unknown error")
+                            it.copy(isLoading = false)
+                        }
                     }
                 }
+            } else if (!initialServerId.isNullOrBlank()) {
+                val server = serverDao.getServerUnitById(initialServerId)
+                if (server != null) {
+                    _state.update { it.copy(
+                        serverId = server.serverId,
+                        serverAddress = server.serverIp,
+                        isLoading = false
+                    ) }
+                }
+            } else {
+                _state.update { it.copy(isLoading = false) }
             }
         }
     }
@@ -82,6 +186,7 @@ class EditScreenModel(
     fun processIntent(intent: EditIntent) {
         when (intent) {
             is EditIntent.UpdateName -> _state.update { it.copy(connectionName = intent.name) }
+            EditIntent.Save -> screenModelScope.launch(Dispatchers.IO) { saveServer() }
 
             // Bulk Updates
             is EditIntent.UpdateInbound -> _state.update { it.copy(inbound = intent.inbound) }
@@ -143,10 +248,131 @@ class EditScreenModel(
         }
     }
 
-    fun initNewConfig() {
-        generateUuid()
-        generateRealityKeys()
-        generateShortId()
+    suspend fun saveServer() {
+        val currentState = state.value
+        val configId = currentState.configId.ifEmpty { cypherService.generateUuid() }
+
+        val inboundSettings = when (currentState.inbound.inboundProtocol) {
+            Configurations.protocol.VLESS -> XrayConfigBuilder.vlessInboundSettings(
+                uuid = if (currentState.inbound.inboundId.isNullOrBlank()) cypherService.generateUuid() else currentState.inbound.inboundId,
+                decryption = Configurations.decryption.NONE,
+                fallbacks = listOf(XrayConfig.Fallback(dest = currentState.inbound.fallbackDest.toString()))
+            )
+            Configurations.protocol.VMESS -> XrayConfigBuilder.vmessInboundSettings(
+                uuid = if (currentState.inbound.inboundId.isNullOrBlank()) cypherService.generateUuid() else currentState.inbound.inboundId,
+                alterId = currentState.inbound.vmessAlterId ?: 0
+            )
+            Configurations.protocol.TROJAN -> XrayConfigBuilder.trojanInboundSettings(
+                password = currentState.inbound.trojanPassword ?: ""
+            )
+            Configurations.protocol.SHADOWSOCKS -> XrayConfigBuilder.shadowsocksInboundSettings(
+                method = currentState.inbound.shadowsocksMethod ?: Configurations.shadowsocksMethod.AES_256_GCM,
+                password = currentState.inbound.shadowsocksPassword ?: ""
+            )
+            else -> XrayConfigBuilder.toSettings(null)
+        }
+
+        val streamSettings = XrayConfig.StreamSettings(
+            network = currentState.stream.streamNetwork,
+            security = currentState.stream.streamSecurity,
+            realitySettings = if (currentState.stream.streamSecurity == Configurations.security.REALITY) {
+                XrayConfig.RealitySettings(
+                    dest = currentState.stream.sniDest ?: "",
+                    serverNames = listOf(currentState.stream.sniDest?.split(":")?.firstOrNull() ?: ""),
+                    privateKey = currentState.stream.realityPrivateKey ?: "",
+                    shortIds = listOf(currentState.stream.realityShortId ?: ""),
+                    spiderX = currentState.stream.realitySpiderX
+                )
+            } else null,
+            wsSettings = if (currentState.stream.streamNetwork == Configurations.network.WS) {
+                XrayConfig.WsSettings(
+                    path = currentState.stream.wsPath ?: "/",
+                    headers = currentState.stream.wsHost?.let { mapOf("Host" to it) }
+                )
+            } else null,
+            grpcSettings = if (currentState.stream.streamNetwork == Configurations.network.GRPC) {
+                XrayConfig.GrpcSettings(
+                    serviceName = currentState.stream.grpcServiceName ?: ""
+                )
+            } else null,
+            tlsSettings = if (currentState.stream.streamSecurity == Configurations.security.TLS) {
+                XrayConfig.TlsSettings(
+                    serverName = currentState.stream.wsHost,
+                    fingerprint = currentState.stream.tlsFingerprint,
+                    alpn = currentState.stream.tlsAlpn,
+                    minVersion = currentState.stream.tlsMinVersion
+                )
+            } else null
+        )
+
+        val xrayConfig = XrayConfig(
+            inbounds = listOf(
+                XrayConfig.InboundConfig(
+                    tag = "proxy",
+                    listen = currentState.inbound.inboundListen,
+                    port = currentState.inbound.inboundPort,
+                    protocol = currentState.inbound.inboundProtocol,
+                    settings = inboundSettings,
+                    streamSettings = streamSettings,
+                    sniffing = XrayConfig.SniffingConfig(enabled = currentState.pro.sniffingEnabled)
+                )
+            ),
+            outbounds = listOf(
+                XrayConfig.OutboundConfig(
+                    protocol = currentState.outbound.outboundType,
+                    tag = "direct"
+                )
+            ),
+            routing = XrayConfigBuilder.defaultRoutingConfig(
+                blockAds = currentState.pro.blockAds
+            ),
+            log = XrayConfig.LogConfig(loglevel = currentState.pro.logLevel)
+        )
+
+        // Generate shared link (using dummy outbound for generator)
+        val dummyOutbound = XrayConfig.OutboundConfig(
+            tag = currentState.connectionName,
+            protocol = currentState.inbound.inboundProtocol,
+            settings = when (currentState.inbound.inboundProtocol) {
+                Configurations.protocol.VLESS -> XrayConfigBuilder.vlessOutboundSettings(
+                    address = currentState.serverAddress,
+                    port = currentState.inbound.inboundPort,
+                    uuid = currentState.inbound.inboundId ?: ""
+                )
+                Configurations.protocol.VMESS -> XrayConfigBuilder.vmessOutboundSettings(
+                    address = currentState.serverAddress,
+                    port = currentState.inbound.inboundPort,
+                    uuid = currentState.inbound.inboundId ?: ""
+                )
+                Configurations.protocol.TROJAN -> XrayConfigBuilder.trojanOutboundSettings(
+                    address = currentState.serverAddress,
+                    port = currentState.inbound.inboundPort,
+                    password = currentState.inbound.trojanPassword ?: ""
+                )
+                Configurations.protocol.SHADOWSOCKS -> XrayConfigBuilder.shadowsocksOutboundSettings(
+                    address = currentState.serverAddress,
+                    port = currentState.inbound.inboundPort,
+                    method = currentState.inbound.shadowsocksMethod?.name?.lowercase()?.replace("_", "-") ?: "aes-256-gcm",
+                    password = currentState.inbound.shadowsocksPassword ?: ""
+                )
+                else -> null
+            },
+            streamSettings = streamSettings.copy(
+                realitySettings = streamSettings.realitySettings?.copy(privateKey = currentState.stream.realityPublicKey ?: "")
+            )
+        )
+
+        val serverState = ServerState(
+            configId = configId,
+            serverId = currentState.serverId,
+            connectionName = currentState.connectionName,
+            serverAddress = currentState.serverAddress,
+            sharedLink = ShareLinkGenerator().generateLink(dummyOutbound),
+            protocol = currentState.inbound.inboundProtocol.name,
+            jsonSettings = XrayConfigBuilder.buildJson(xrayConfig)
+        )
+        serverDao.insertServerState(serverState)
+        _state.update { it.copy(isSaved = true, configId = configId) }
     }
 
     fun generateUuid() {

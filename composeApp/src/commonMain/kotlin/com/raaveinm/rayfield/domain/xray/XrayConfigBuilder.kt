@@ -25,6 +25,10 @@ object XrayConfigBuilder {
         return jsonFormatter.encodeToString(config)
     }
 
+    fun parseJson(json: String): XrayConfig {
+        return jsonFormatter.decodeFromString(json)
+    }
+
     inline fun <reified T> toSettings(settings: T): JsonObject {
         return jsonFormatter.encodeToJsonElement(settings).jsonObject
     }

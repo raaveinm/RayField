@@ -23,4 +23,4 @@ data class ServerUnit(
         serverSshPrivateKey: String?,
         serverSshPort: Int
     ) : this(serverId, serverName, serverIp, serverSshLogin, serverSshPassword, serverSshPrivateKey, serverSshPort, null)
-    }
+}

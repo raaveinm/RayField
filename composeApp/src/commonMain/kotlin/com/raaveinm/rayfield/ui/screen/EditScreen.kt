@@ -177,7 +177,7 @@ data class EditScreen (
             }
 
             val scrollState = rememberScrollState()
-            val tabs = listOf(SshTab(serverId, configId), InboundTab(configId), StreamTab, OutboundTab, ProTab)
+            val tabs = listOf(SshTab(serverId, configId), InboundTab(configId, serverId), StreamTab, OutboundTab, ProTab)
 
             TabNavigator(tabs.first()) { tabNavigator ->
                 Box(
