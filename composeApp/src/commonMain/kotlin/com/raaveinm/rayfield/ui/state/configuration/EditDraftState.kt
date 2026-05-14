@@ -24,6 +24,7 @@ data class InboundDraftState(
     val inboundPort: Int,
     val inboundListen: String,
     val inboundId: String? = null,
+    val flow: Configurations.flow? = null,
     val shadowsocksMethod: Configurations.shadowsocksMethod? = null,
     val shadowsocksPassword: String? = null,
     val trojanPassword: String? = null,
@@ -41,6 +42,7 @@ data class StreamDraftState(
     val tlsMinVersion: String? = null,
     val tlsAlpn: List<String>? = null,
     val tlsFingerprint: Configurations.fingerprint? = null,
+    val realityKeyPair: com.raaveinm.rayfield.data.xray.types.XrayKeyPair? = null,
     val realityPublicKey: String? = null,
     val realityPrivateKey: String? = null,
     val realityShortId: String? = null,
@@ -87,6 +89,7 @@ sealed interface EditIntent {
     data class UpdateInboundPort(val port: Int) : EditIntent
     data class UpdateInboundListen(val listen: String) : EditIntent
     data class UpdateInboundId(val id: String?) : EditIntent
+    data class UpdateInboundFlow(val flow: Configurations.flow?) : EditIntent
     data class UpdateShadowsocksMethod(val method: Configurations.shadowsocksMethod?) : EditIntent
     data class UpdateShadowsocksPassword(val password: String?) : EditIntent
     data class UpdateTrojanPassword(val password: String?) : EditIntent

@@ -38,6 +38,7 @@ class EditScreenModel(
                 inboundPort = 443,
                 inboundListen = "0.0.0.0",
                 inboundId = "",
+                flow = null,
                 fallbackDest = 8080
             ),
             stream = StreamDraftState(
@@ -106,11 +107,14 @@ class EditScreenModel(
                                 else -> null
                             }
 
+                            val flow = (settings as? XrayConfig.VlessInboundSettings)?.clients?.firstOrNull()?.flow
+
                             InboundDraftState(
                                 inboundProtocol = ib.protocol,
                                 inboundPort = ib.port,
                                 inboundListen = ib.listen,
                                 inboundId = clientId ?: "",
+                                flow = flow,
                                 vmessAlterId = (settings as? XrayConfig.VMessInboundSettings)?.clients?.firstOrNull()?.alterId,
                                 shadowsocksMethod = (settings as? XrayConfig.ShadowsocksInboundSettings)?.method?.let { m ->
                                     Configurations.shadowsocksMethod.entries.find { it.name.lowercase().replace("_", "-") == m }
@@ -133,7 +137,8 @@ class EditScreenModel(
                                 tlsMinVersion = s.tlsSettings?.minVersion,
                                 tlsAlpn = s.tlsSettings?.alpn,
                                 tlsFingerprint = s.tlsSettings?.fingerprint,
-                                realityPublicKey = "", // Server config doesn't have public key
+                                realityKeyPair = s.realitySettings?.privateKey?.let { com.raaveinm.rayfield.data.xray.types.XrayKeyPair(publicKey = "", privateKey = it) },
+                                realityPublicKey = "",
                                 realityPrivateKey = s.realitySettings?.privateKey,
                                 realityShortId = s.realitySettings?.shortIds?.firstOrNull(),
                                 realitySpiderX = s.realitySettings?.spiderX
@@ -199,6 +204,7 @@ class EditScreenModel(
             is EditIntent.UpdateInboundPort -> _state.update { it.copy(inbound = it.inbound.copy(inboundPort = intent.port)) }
             is EditIntent.UpdateInboundListen -> _state.update { it.copy(inbound = it.inbound.copy(inboundListen = intent.listen)) }
             is EditIntent.UpdateInboundId -> _state.update { it.copy(inbound = it.inbound.copy(inboundId = intent.id)) }
+            is EditIntent.UpdateInboundFlow -> _state.update { it.copy(inbound = it.inbound.copy(flow = intent.flow)) }
             is EditIntent.UpdateShadowsocksMethod -> _state.update { it.copy(inbound = it.inbound.copy(shadowsocksMethod = intent.method)) }
             is EditIntent.UpdateShadowsocksPassword -> _state.update { it.copy(inbound = it.inbound.copy(shadowsocksPassword = intent.password)) }
             is EditIntent.UpdateTrojanPassword -> _state.update { it.copy(inbound = it.inbound.copy(trojanPassword = intent.password)) }
@@ -250,11 +256,14 @@ class EditScreenModel(
 
     suspend fun saveServer() {
         val currentState = state.value
+        if (currentState.inbound.inboundPort !in 1..65535) return
+        
         val configId = currentState.configId.ifEmpty { cypherService.generateUuid() }
 
         val inboundSettings = when (currentState.inbound.inboundProtocol) {
             Configurations.protocol.VLESS -> XrayConfigBuilder.vlessInboundSettings(
                 uuid = if (currentState.inbound.inboundId.isNullOrBlank()) cypherService.generateUuid() else currentState.inbound.inboundId,
+                flow = currentState.inbound.flow,
                 decryption = Configurations.decryption.NONE,
                 fallbacks = listOf(XrayConfig.Fallback(dest = currentState.inbound.fallbackDest.toString()))
             )
@@ -276,9 +285,10 @@ class EditScreenModel(
             network = currentState.stream.streamNetwork,
             security = currentState.stream.streamSecurity,
             realitySettings = if (currentState.stream.streamSecurity == Configurations.security.REALITY) {
+                val serverNames = currentState.stream.sniDest?.split(":")?.firstOrNull()?.let { listOf(it) } ?: emptyList()
                 XrayConfig.RealitySettings(
                     dest = currentState.stream.sniDest ?: "",
-                    serverNames = listOf(currentState.stream.sniDest?.split(":")?.firstOrNull() ?: ""),
+                    serverNames = serverNames,
                     privateKey = currentState.stream.realityPrivateKey ?: "",
                     shortIds = listOf(currentState.stream.realityShortId ?: ""),
                     spiderX = currentState.stream.realitySpiderX
@@ -321,6 +331,11 @@ class EditScreenModel(
                 XrayConfig.OutboundConfig(
                     protocol = currentState.outbound.outboundType,
                     tag = "direct"
+                ),
+                XrayConfig.OutboundConfig(
+                    protocol = Configurations.protocol.BLACKHOLE,
+                    tag = "block",
+                    settings = XrayConfigBuilder.blackholeOutboundSettings()
                 )
             ),
             routing = XrayConfigBuilder.defaultRoutingConfig(
@@ -388,6 +403,7 @@ class EditScreenModel(
         _state.update {
             it.copy(
                 stream = it.stream.copy(
+                    realityKeyPair = keyPair,
                     realityPrivateKey = keyPair.privateKey,
                     realityPublicKey = keyPair.publicKey
                 )

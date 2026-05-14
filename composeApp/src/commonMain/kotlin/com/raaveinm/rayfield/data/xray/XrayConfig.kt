@@ -6,6 +6,7 @@ package com.raaveinm.rayfield.data.xray
 // Created by Kirill "Raaveinm" on 4/29/26.
 //
 
+import kotlinx.serialization.Required
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -229,6 +230,7 @@ data class XrayConfig(
     @Serializable
     data class VlessInboundSettings(
         val clients: List<VlessUser>,
+        @Required
         val decryption: Configurations.decryption = Configurations.decryption.NONE,
         val fallbacks: List<Fallback>? = null
     )

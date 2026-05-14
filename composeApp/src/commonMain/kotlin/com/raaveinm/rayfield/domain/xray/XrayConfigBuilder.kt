@@ -33,18 +33,40 @@ object XrayConfigBuilder {
         return jsonFormatter.encodeToJsonElement(settings).jsonObject
     }
 
+    // --- STREAM SETTINGS FACTORIES ---
+
+    fun realityStreamSettings(
+        dest: String,
+        serverNames: List<String>,
+        privateKey: String,
+        shortIds: List<String>,
+        show: Boolean = false
+    ): XrayConfig.StreamSettings {
+        return XrayConfig.StreamSettings(
+            network = Configurations.network.TCP,
+            security = Configurations.security.REALITY,
+            realitySettings = XrayConfig.RealitySettings(
+                show = show,
+                dest = dest,
+                serverNames = serverNames,
+                privateKey = privateKey,
+                shortIds = shortIds
+            )
+        )
+    }
+
     // --- PROTOCOL SETTINGS FACTORIES ---
 
     fun vlessInboundSettings(
         uuid: String,
-        email: String? = null,
         flow: Configurations.flow? = null,
+        email: String? = null,
         level: Int? = null,
         decryption: Configurations.decryption = Configurations.decryption.NONE,
         fallbacks: List<XrayConfig.Fallback>? = null
     ): JsonObject {
         val settings = XrayConfig.VlessInboundSettings(
-            clients = listOf(XrayConfig.VlessUser(id = uuid, flow = flow, email = email, level = level)),
+            clients = listOf(XrayConfig.VlessUser(id = uuid, flow = flow, email = email)),
             decryption = decryption,
             fallbacks = fallbacks
         )
@@ -79,7 +101,7 @@ object XrayConfigBuilder {
     fun shadowsocksInboundSettings(
         method: String,
         password: String,
-        network: String? = null
+        network: String? = "tcp,udp"
     ): JsonObject {
         val settings = XrayConfig.ShadowsocksInboundSettings(
             method = method,
@@ -347,7 +369,7 @@ object XrayConfigBuilder {
                 XrayConfig.RoutingRule(
                     type = Configurations.ruleType.FIELD,
                     ip = listOf("geoip:private"),
-                    outboundTag = "direct"
+                    outboundTag = "block"
                 )
             )
         }
@@ -362,7 +384,7 @@ object XrayConfigBuilder {
     fun shadowsocksInboundSettings(
         method: Configurations.shadowsocksMethod = Configurations.shadowsocksMethod.AES_256_GCM,
         password: String,
-        network: String? = null
+        network: String? = "tcp,udp"
     ): JsonObject {
         val settings = XrayConfig.ShadowsocksInboundSettings(
             method = jsonFormatter.encodeToJsonElement(method).jsonPrimitive.content,
