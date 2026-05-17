@@ -12,6 +12,7 @@ data class ServerUnit(
     val serverSshPassword: String?,
     val serverSshPrivateKey: String?,
     val serverSshPort: Int,
+    val serverJsonConfig: String? = null,
     val iconLocation: String? = null
     ) {
     constructor(
@@ -21,6 +22,7 @@ data class ServerUnit(
         serverSshLogin: String,
         serverSshPassword: String?,
         serverSshPrivateKey: String?,
+        serverJsonConfig: String?,
         serverSshPort: Int
-    ) : this(serverId, serverName, serverIp, serverSshLogin, serverSshPassword, serverSshPrivateKey, serverSshPort, null)
+    ) : this(serverId, serverName, serverIp, serverSshLogin, serverSshPassword, serverSshPrivateKey, serverSshPort, null,null)
 }

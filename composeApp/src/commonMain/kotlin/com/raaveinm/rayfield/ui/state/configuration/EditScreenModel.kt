@@ -324,7 +324,7 @@ class EditScreenModel(
                     protocol = currentState.inbound.inboundProtocol,
                     settings = inboundSettings,
                     streamSettings = streamSettings,
-                    sniffing = XrayConfig.SniffingConfig(enabled = currentState.pro.sniffingEnabled)
+                    sniffing = XrayConfig.SniffingObject(enabled = currentState.pro.sniffingEnabled)
                 )
             ),
             outbounds = listOf(

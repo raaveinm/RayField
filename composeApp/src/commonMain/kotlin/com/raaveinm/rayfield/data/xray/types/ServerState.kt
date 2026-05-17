@@ -23,10 +23,10 @@ data class ServerState(
     val serverId: String, // Many - One with @ServerUnit
     var connectionName: String? = null,
     val serverAddress: String,
+    val uuid: XrayKeyPair? = null,
     val sharedLink: String,
     @Ignore val iconLocation: String? = null,
-    val protocol: String,
-    val jsonSettings: String,
+    val protocol: String
 ) {
 
     // Secondary constructor for Room
@@ -35,8 +35,8 @@ data class ServerState(
         serverId: String,
         connectionName: String?,
         serverAddress: String,
+        uuid: XrayKeyPair?,
         sharedLink: String,
-        protocol: String,
-        jsonSettings: String
-    ) : this(configId, serverId, connectionName, serverAddress, sharedLink, null, protocol, jsonSettings)
+        protocol: String
+    ) : this(configId, serverId, connectionName, serverAddress, uuid, sharedLink, null, protocol)
 }

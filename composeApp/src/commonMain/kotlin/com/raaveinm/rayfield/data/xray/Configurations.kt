@@ -10,25 +10,107 @@ import kotlinx.serialization.Serializable
 //
 
 object Configurations {
-
-    @Serializable
-    enum class loglevel {
-        @SerialName("debug") DEBUG,
-        @SerialName("info") INFO,
-        @SerialName("warning") WARNING,
-        @SerialName("error") ERROR,
-        @SerialName("none") NONE
-    }
+    ///////////////////////////////////////////////
+    // Common
+    ///////////////////////////////////////////////
 
     @Serializable
     enum class network {
         @SerialName("tcp") TCP,
-        @SerialName("kcp") KCP,
-        @SerialName("ws") WS,
+        @SerialName("udp") UDP,
+        @SerialName("tcp,udp") TCP_UDP
+    }
+
+    @Serializable
+    enum class protocol {
+        @SerialName("vless") VLESS,
+        @SerialName("shadowsocks") SHADOWSOCKS,
+        //        @SerialName("hysteria") HYSTERIA,
+        @SerialName("freedom") FREEDOM,
+        @SerialName("blackhole") BLACKHOLE
+    }
+
+    ///////////////////////////////////////////////
+    // Log Configuration
+    ///////////////////////////////////////////////
+
+    @Serializable
+    enum class loglevel {
+        @SerialName("debug")
+        DEBUG,
+        @SerialName("info")
+        INFO,
+        @SerialName("warning")
+        WARNING,
+        @SerialName("error")
+        ERROR,
+        @SerialName("none")
+        NONE
+    }
+
+    ///////////////////////////////////////////////
+    // DNS Configuration
+    ///////////////////////////////////////////////
+
+    @Serializable
+    enum class queryStrategy {
+        @SerialName("UseIP") USE_IP,
+        @SerialName("UseIPv4") USE_IPV4,
+        @SerialName("UseIPv6") USE_IPV6,
+        @SerialName("UseSystem") USE_SYSTEM
+    }
+
+    @Serializable
+    enum class targetOptions{
+        @SerialName("api.github.com") GITHUB,
+        @SerialName("dl.google.com") GOOGLE,
+        @SerialName("api.cloudflare.com") CLOUDFLARE,
+        @SerialName("tagmanager.google.com") GOOGLE_TAG_MANAGER,
+        @SerialName("update.microsoft.com") MICROSOFT
+    }
+
+    ///////////////////////////////////////////////
+    // Routing
+    ///////////////////////////////////////////////
+
+    @Serializable
+    enum class routingDomainStrategy {
+        @SerialName("AsIs") AS_IS,
+        @SerialName("IPIfNonMatch") IP_IF_NON_MATCH,
+        @SerialName("IPOnDemand") IP_ON_DEMAND
+    }
+
+    ///////////////////////////////////////////////
+    // Inbound Configuration
+    ///////////////////////////////////////////////
+
+    @Serializable
+    enum class inboundProtocol {
+        @SerialName("vless") VLESS,
+        @SerialName("shadowsocks") SHADOWSOCKS,
+        //        @SerialName("hysteria") HYSTERIA,
+    }
+
+    @Serializable
+    enum class sniffingDest {
         @SerialName("http") HTTP,
-        @SerialName("domainsocket") DOMAIN_SOCKET,
+        @SerialName("tls") TLS,
         @SerialName("quic") QUIC,
-        @SerialName("grpc") GRPC
+        @SerialName("fakedns") FAKE_DNS
+    }
+
+    ///////////////////////////////////////////////
+    // Outbound Configuration
+    ///////////////////////////////////////////////
+
+    @Serializable
+    enum class transportNetwork {
+        @SerialName("tcp") TCP,// "tcp" for Reality/SS, "xhttp" or "grpc" for stealth
+        @SerialName("raw") RAW,
+        @SerialName("xhttp") XHTTP,
+        @SerialName("mkcp") MKCP,
+        //@SerialName("grpc") GRPC,  // DEPRECATED
+        @SerialName("hysteria") HYSTERIA
     }
 
     @Serializable
@@ -39,36 +121,41 @@ object Configurations {
     }
 
     @Serializable
-    enum class domainStrategy {
+    enum class targetStrategy {
         @SerialName("AsIs") AS_IS,
         @SerialName("UseIP") USE_IP,
+        @SerialName("UseIPv6v4") USE_IPV6V4,
+        @SerialName("UseIPv4v6") USE_IPV4V6,
         @SerialName("UseIPv4") USE_IPV4,
-        @SerialName("UseIPv6") USE_IPV6,
-        @SerialName("IPIfNonMatch") IP_IF_NON_MATCH,
-        @SerialName("IPOnDemand") IP_ON_DEMAND
+        @SerialName("ForceIP") FORCE_IP,
+        @SerialName("ForceIPv6v4") FORCE_IPV6V4,
+        @SerialName("ForceIPv4v6") FORCE_IPV4V6,
+        @SerialName("ForceIPv4") FORCE_IPV4
     }
 
+    ///////////////////////////////////////////////
+    // Protocol Configuration
+    ///////////////////////////////////////////////
+
+    // Shadowsocks
+
     @Serializable
-    enum class routingNetwork {
+    enum class shadowSocksNetwork {
         @SerialName("tcp") TCP,
         @SerialName("udp") UDP,
         @SerialName("tcp,udp") TCP_UDP
     }
 
     @Serializable
-    enum class protocol {
-        @SerialName("vless") VLESS,
-        @SerialName("vmess") VMESS,
-        @SerialName("trojan") TROJAN,
-        @SerialName("shadowsocks") SHADOWSOCKS,
-        @SerialName("socks") SOCKS,
-        @SerialName("dns") DNS,
-        @SerialName("wireguard") WIREGUARD,
-        @SerialName("hysteria") HYSTERIA,
-        @SerialName("blackhole") BLACKHOLE,
-        @SerialName("freedom") FREEDOM,
-        @SerialName("loopback") LOOPBACK
+    enum class shadowsocksMethod {
+        @SerialName("aes-128-gcm") AES_128_GCM,
+        @SerialName("aes-192-gcm") AES_192_GCM,
+        @SerialName("aes-256-gcm") AES_256_GCM,
+        @SerialName("chacha20-poly1305") CHACHA20_POLY1305,
+        @SerialName("chacha20-ietf-poly1305") CHACHA20_POLY1305_IETF
     }
+
+    // VLESS
 
     @Serializable
     enum class fingerprint {
@@ -86,39 +173,28 @@ object Configurations {
     }
 
     @Serializable
-    enum class encryption {
-        @SerialName("none") NONE,
-        @SerialName("auto") AUTO,
-        @SerialName("aes-128-gcm") AES_128_GCM,
-        @SerialName("aes-256-gcm") AES_256_GCM,
-        @SerialName("chacha20-poly1305") CHACHA20_POLY1305,
-        @SerialName("zero") ZERO
-    }
-
-    @Serializable
-    enum class decryption {
-        @SerialName("none") NONE
-    }
-
-    @Serializable
-    enum class shadowsocksMethod {
-        @SerialName("aes-128-gcm") AES_128_GCM,
-        @SerialName("aes-256-gcm") AES_256_GCM,
-        @SerialName("chacha20-poly1305") CHACHA20_POLY1305,
-        @SerialName("2022-blake3-aes-128-gcm") BLAKE3_AES_128_GCM,
-        @SerialName("2022-blake3-aes-256-gcm") BLAKE3_AES_256_GCM,
-        @SerialName("2022-blake3-chacha20-poly1305") BLAKE3_CHACHA20_POLY1305
-    }
-
-    @Serializable
-    enum class flow {
+    enum class vlessFlow{
+        @SerialName("") NONE,
         @SerialName("xtls-rprx-vision") XTLS_RPRX_VISION,
-        @SerialName("xtls-rprx-vision-udp443") XTLS_RPRX_VISION_UDP443
+        @SerialName("xtls-rprx-vision-udp") XTLS_RPRX_VISION_UDP,
     }
 
     @Serializable
-    enum class ruleType {
-        @SerialName("field") FIELD,
-        @SerialName("logical") LOGICAL
+    enum class vlessDecryption {
+        @SerialName("none") NONE,
+        @SerialName("rc4-md5") RC4_MD5,
+        @SerialName("chacha20-poly1305") CHACHA20_POLY1305,
+        @SerialName("aes-128-gcm") AES_128_GCM,
+        @SerialName("aes-128-ctr") AES_128_CTR,
+        @SerialName("aes-192-gcm") AES_192_GCM,
+        @SerialName("aes-256-gcm") AES_256_GCM,
+        @SerialName("chacha20-ietf-poly1305") CHACHA20_POLY1305_IETF
+    }
+
+    @Serializable
+    enum class vlessTarget {
+        @SerialName("tcp") TCP,
+        @SerialName("udp") UDP,
+        @SerialName("tcp,udp") TCP_UDP
     }
 }
