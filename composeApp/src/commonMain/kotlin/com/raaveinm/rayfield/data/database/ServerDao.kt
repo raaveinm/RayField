@@ -27,6 +27,9 @@ interface ServerDao {
     @Query("SELECT * FROM server_units WHERE serverId = :id")
     suspend fun getServerUnitById(id: String): ServerUnit?
 
+    @Query("SELECT serverJsonConfig FROM server_units WHERE serverId = :id")
+    suspend fun getServerJsonConfigById(id: String): String?
+
     ///////////////////////////////////////////////
     // ServerState operations
     ///////////////////////////////////////////////
@@ -36,16 +39,12 @@ interface ServerDao {
     @Query("SELECT * FROM server_states WHERE serverId = :serverId")
     fun getServerStatesForServer(serverId: String): Flow<List<ServerState>>
 
-    @Query("SELECT * FROM server_states WHERE configId = :id")
-    suspend fun getConfigById(id: String): ServerState?
+    @Query("SELECT * FROM server_states WHERE configId = :configId")
+    suspend fun getServerStateById(configId: String): ServerState?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertServerState(state: ServerState)
 
     @Delete
     suspend fun deleteServerState(state: ServerState)
-
-    @Transaction
-    @Query("SELECT * FROM server_units WHERE serverId = :serverId")
-    fun getServerWithStates(serverId: String): Flow<ServerWithState?>
 }

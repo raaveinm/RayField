@@ -44,8 +44,8 @@ import org.koin.core.parameter.parametersOf
 //
 
 @Composable
-fun Screen.SshScreen(serverId: String? = null, configId: String? = null) {
-    val screenModel = koinScreenModel<SshScreenModel> { parametersOf(serverId, configId) }
+fun Screen.SshScreen(serverId: String? = null) {
+    val screenModel = koinScreenModel<SshScreenModel> { parametersOf(serverId) }
     val state by screenModel.state.collectAsState()
 
     val globalBlurHolder = GlobalBlurHolder.current ?: rememberBlurHolder()

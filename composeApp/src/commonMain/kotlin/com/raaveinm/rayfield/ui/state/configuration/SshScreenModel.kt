@@ -15,15 +15,13 @@ import kotlinx.coroutines.launch
 //
 
 class SshScreenModel(
-    val serverDao: ServerDao,
-    private val initialServerId: String? = null,
-    private val initialConfigId: String? = null,
+    private val serverDao: ServerDao,
+    private val initialServerId: String? = null
 ) : ScreenModel {
     private val _state = MutableStateFlow(
         SshDraftState(
             serverId = initialServerId ?: "",
-            configId = initialConfigId ?: "",
-            isLoading = initialServerId != null || initialConfigId != null
+            isLoading = initialServerId != null
         )
     )
     val state = _state.asStateFlow()
@@ -34,28 +32,7 @@ class SshScreenModel(
 
     init {
         screenModelScope.launch {
-            if (!initialConfigId.isNullOrBlank()) {
-                val config = serverDao.getConfigById(initialConfigId)
-                if (config != null) {
-                    val server = serverDao.getServerUnitById(config.serverId)
-                    if (server != null) {
-                        _state.value = SshDraftState(
-                            serverId = server.serverId,
-                            configId = config.configId,
-                            name = server.serverName ?: "",
-                            ip = server.serverIp,
-                            login = server.serverSshLogin,
-                            password = server.serverSshPassword ?: "",
-                            port = server.serverSshPort.toString(),
-                            isLoading = false
-                        )
-                    } else {
-                        _state.update { it.copy(isLoading = false) }
-                    }
-                } else {
-                    _state.update { it.copy(isLoading = false) }
-                }
-            } else if (!initialServerId.isNullOrBlank()) {
+            if (initialServerId != null) {
                 val server = serverDao.getServerUnitById(initialServerId)
 
                 if (server == null) {
@@ -63,18 +40,18 @@ class SshScreenModel(
                         serverId = initialServerId,
                         isLoading = false
                     )
-                    return@launch
+                } else {
+                    _state.value = SshDraftState(
+                        serverId = server.serverId,
+                        name = server.serverName ?: "",
+                        ip = server.serverIp,
+                        login = server.serverSshLogin,
+                        password = server.serverSshPassword ?: "",
+                        port = server.serverSshPort.toString(),
+                        pathToPkey = server.serverSshPrivateKey ?: "",
+                        isLoading = false
+                    )
                 }
-
-                _state.value = SshDraftState(
-                    serverId = server.serverId,
-                    name = server.serverName ?: "",
-                    ip = server.serverIp,
-                    login = server.serverSshLogin,
-                    password = server.serverSshPassword ?: "",
-                    port = server.serverSshPort.toString(),
-                    isLoading = false
-                )
             } else {
                 _state.update { it.copy(isLoading = false) }
             }
@@ -99,22 +76,26 @@ class SshScreenModel(
         if (currentState.ip.isBlank()) return
         if (currentState.login.isBlank()) return
         if (currentState.port.isBlank()) return
-        if (currentState.password.isNullOrBlank() && currentState.pathToPkey.isNullOrBlank()) return
-
-        val serverUnit = ServerUnit(
-            serverId = currentState.serverId.takeIf { it.isNotBlank() } ?: "server_${kotlin.random.Random.nextInt(10000)}",
-            serverName = currentState.name.takeIf { it.isNotBlank() },
-            serverIp = currentState.ip,
-            serverSshLogin = currentState.login,
-            serverSshPassword = currentState.password,
-            serverSshPort = currentState.port.toIntOrNull() ?: 22,
-            serverSshPrivateKey = currentState.pathToPkey,
-            iconLocation = flags.random() // TODO(replace with picker)
-        )
 
         screenModelScope.launch {
+            val existingServer = if (currentState.serverId.isNotBlank()) {
+                serverDao.getServerUnitById(currentState.serverId)
+            } else null
+
+            val serverUnit = ServerUnit(
+                serverId = currentState.serverId.takeIf { it.isNotBlank() } ?: "server_${kotlin.random.Random.nextInt(10000)}",
+                serverName = currentState.name.takeIf { it.isNotBlank() },
+                serverIp = currentState.ip,
+                serverSshLogin = currentState.login,
+                serverSshPassword = currentState.password,
+                serverSshPort = currentState.port.toIntOrNull() ?: 22,
+                serverSshPrivateKey = currentState.pathToPkey,
+                serverJsonConfig = existingServer?.serverJsonConfig,
+                iconLocation = existingServer?.iconLocation ?: flags.random()
+            )
+
             serverDao.insertServerUnit(serverUnit)
-            _state.update { it.copy(isSaved = true) }
+            _state.update { it.copy(isSaved = true, serverId = serverUnit.serverId) }
         }
     }
 }

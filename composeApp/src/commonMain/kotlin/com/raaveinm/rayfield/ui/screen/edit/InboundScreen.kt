@@ -33,7 +33,6 @@ import com.raaveinm.rayfield.ui.fragments.edit.SettingOutlinedText
 import com.raaveinm.rayfield.ui.state.GlobalBlurHolder
 import com.raaveinm.rayfield.ui.state.configuration.EditIntent
 import com.raaveinm.rayfield.ui.state.configuration.EditScreenModel
-import com.raaveinm.rayfield.ui.state.configuration.SshIntent
 import io.github.neilyich.glassmorphism.blurredBackground
 import io.github.neilyich.glassmorphism.rememberBlurHolder
 import kotlinx.coroutines.launch
@@ -118,7 +117,7 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
                         blurHolder = globalBlurHolder,
                         items = Configurations.protocol.entries.map { it.name },
                         selectedItem = state.inbound.inboundProtocol.name,
-                        onItemSelected = {
+                        onItemSelected = { 
                             scope.launch {
                                 editScreenModel.processIntent(
                                     EditIntent.UpdateInboundProtocol(
@@ -159,25 +158,8 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
                     )
                 }
             }
+
             when (state.inbound.inboundProtocol) {
-//                    Configurations.protocol.VLESS -> {}
-                Configurations.protocol.VMESS -> {
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(text = "VMess Alter ID", color = onSurface, modifier = Modifier)
-                            SettingOutlinedText(
-                                state = vmessAlterIdState,
-                                label = { Text("Alter ID") },
-                                modifier = Modifier.fillMaxWidth(),
-                                keyboardType = KeyboardType.Number
-                            )
-                        }
-                    }
-                }
                 Configurations.protocol.SHADOWSOCKS -> {
                     item {
                         Row(
@@ -185,7 +167,7 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
                             horizontalArrangement = Arrangement.spacedBy(16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = "Shadowsocks encryption method", color = onSurface, modifier = Modifier)
+                            Text(text = "Shadowsocks encryption method", color = onSurface, modifier = Modifier) 
                             BlurredDropDown(
                                 blurHolder = globalBlurHolder,
                                 items = Configurations.shadowsocksMethod.entries.map { it.name },
@@ -218,26 +200,9 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
                         }
                     }
                 }
-                Configurations.protocol.TROJAN -> {
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(text = "Trojan password", color = onSurface, modifier = Modifier)
-                            CryptoTextField(
-                                state = trojanPasswordState,
-                                label = "Trojan password",
-                                onGenerateClick = { /*TODO*/ },
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
-                }
-                else ->{
-                }
+                else -> { /* Other protocols have generic or no settings here for now */ }
             }
+
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),

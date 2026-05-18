@@ -5,7 +5,6 @@ package com.raaveinm.rayfield.ui.state.configuration
 //
 data class SshDraftState(
     val serverId: String = "",
-    val configId: String = "",
     val name: String = "",
     val ip: String = "",
     val login: String = "root",

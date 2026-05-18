@@ -5,10 +5,12 @@ import androidx.room3.Database
 import androidx.room3.RoomDatabase
 import androidx.room3.RoomDatabaseConstructor
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import androidx.room3.TypeConverters
 import com.raaveinm.rayfield.data.ssh.ServerUnit
 import com.raaveinm.rayfield.data.xray.types.ServerState
 
-@Database(entities = [ServerUnit::class, ServerState::class], version = 2)
+@Database(entities = [ServerUnit::class, ServerState::class], version = 3)
+@TypeConverters(Converters::class)
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun serverDao(): ServerDao

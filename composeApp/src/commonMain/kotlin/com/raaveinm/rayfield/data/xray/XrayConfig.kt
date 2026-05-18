@@ -133,6 +133,7 @@ data class XrayConfig(
 
     @Serializable
     data class RealitySettings (
+        val dest: String? = null,
         val target: Configurations.targetOptions? = Configurations.targetOptions.GITHUB, // target mask or ip
         val customTarget: String? = null, // same, but with manual mask site input
         val serverNames: List<String>, // Domain names of mask servers
@@ -207,5 +208,41 @@ data class XrayConfig(
     data class VlessFallback(
         val dest: String,
         val port: Int
+    )
+
+    // Outbound Protocols
+
+    @Serializable
+    data class VlessOutboundSettings(
+        val vnext: List<VnextServer>
+    )
+
+    @Serializable
+    data class VnextServer(
+        val address: String,
+        val port: Int,
+        val users: List<VnextUser>
+    )
+
+    @Serializable
+    data class VnextUser(
+        val id: String,
+        val encryption: String = "none",
+        val flow: Configurations.vlessFlow? = null
+    )
+
+    @Serializable
+    data class ShadowsocksOutboundSettings(
+        val servers: List<ShadowsocksOutboundServer>
+    )
+
+    @Serializable
+    data class ShadowsocksOutboundServer(
+        val address: String,
+        val port: Int,
+        val method: Configurations.shadowsocksMethod,
+        val password: String,
+        val email: String? = null,
+        val level: Int? = null
     )
 }

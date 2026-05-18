@@ -17,3 +17,10 @@ fun circlesJvm() = listOf(
     Circle(coordinates = Pair(279.dp, (-80).dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .48f), radius = 280.dp), // circle 7
     Circle(coordinates = Pair((-10).dp, 100.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .48f), radius = 200.dp, attachedEnd = false, attachedBottom = true), // circle 3
 )
+
+@Composable
+fun circlesAndroid() = listOf(
+    Circle(coordinates = Pair((-12).dp, (-78).dp), color = MaterialTheme.colorScheme.errorContainer, radius = 160.dp, attachedEnd = true, attachedBottom = true), // circle 2
+    Circle(coordinates = Pair(8.dp, 336.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = .72f), radius = 96.dp, attachedEnd = true), // circle 4
+    Circle(coordinates = Pair((-10).dp, 250.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .48f), radius = 180.dp, attachedEnd = false, attachedBottom = true), // circle 3
+)

@@ -30,14 +30,13 @@ val commonModule = module {
     factory { params ->
         SshScreenModel(
             serverDao = get(),
-            initialServerId = params.values.getOrNull(0) as? String,
-            initialConfigId = params.values.getOrNull(1) as? String
-        )}
+            initialServerId = params.values.getOrNull(0) as? String
+        )
+    }
     factory { params ->
         EditScreenModel(
             serverDao = get(),
             cypherService = get(),
-            initialConfigId = params.values.getOrNull(0) as? String,
             initialServerId = params.values.getOrNull(1) as? String
         )}
 }
