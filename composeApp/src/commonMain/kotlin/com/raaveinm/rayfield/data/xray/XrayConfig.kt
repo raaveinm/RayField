@@ -170,6 +170,8 @@ data class XrayConfig(
     // Protocols Configuration
     ///////////////////////////////////////////////
 
+    sealed interface InboundSettings
+
     // Shadowsocks
 
     @Serializable
@@ -179,7 +181,7 @@ data class XrayConfig(
         val password: String, // openssl rand -base64 <length> - Uses a pre-shared key similar to WireGuard as the password
         val email: String = "love@xray.com",
         val users: List<ShadowsocksUser> = emptyList()
-    )
+    ) : InboundSettings
     @Serializable
     data class ShadowsocksUser(
         val password: String,
@@ -194,7 +196,7 @@ data class XrayConfig(
         val users: List<VlessUser> = emptyList(),
         val decryption: Configurations.vlessDecryption = Configurations.vlessDecryption.NONE,
         val fallbacks: List<VlessFallback>? = null
-    )
+    ) : InboundSettings
 
     @Serializable
     data class VlessUser(

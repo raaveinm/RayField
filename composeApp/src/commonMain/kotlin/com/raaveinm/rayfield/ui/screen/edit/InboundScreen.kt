@@ -8,15 +8,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,9 +24,13 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import com.raaveinm.rayfield.data.xray.Configurations
+import com.raaveinm.rayfield.data.xray.XrayConfig
 import com.raaveinm.rayfield.ui.adapters.AdaptivePadding
+import com.raaveinm.rayfield.ui.adapters.IpAutoFormatTransformation
 import com.raaveinm.rayfield.ui.fragments.BlurredDropDown
-import com.raaveinm.rayfield.ui.fragments.edit.CryptoTextField
+import com.raaveinm.rayfield.ui.fragments.configurations.ShadowsocksConfiguration
+import com.raaveinm.rayfield.ui.fragments.configurations.VlessSettings
+import com.raaveinm.rayfield.ui.fragments.configurations.VlessStreamSettings
 import com.raaveinm.rayfield.ui.fragments.edit.SettingOutlinedText
 import com.raaveinm.rayfield.ui.state.GlobalBlurHolder
 import com.raaveinm.rayfield.ui.state.configuration.EditIntent
@@ -49,43 +51,6 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
     val editScreenModel = koinScreenModel<EditScreenModel> { parametersOf(configId, serverId) }
     val state by editScreenModel.state.collectAsState()
     val scope = rememberCoroutineScope()
-
-    val portState = remember { TextFieldState() }
-    val listenState = remember { TextFieldState() }
-    val shadowsocksPasswordState = remember { TextFieldState() }
-    val vmessAlterIdState = remember { TextFieldState() }
-    val trojanPasswordState = remember { TextFieldState() }
-    val fallbackDestState = remember { TextFieldState() }
-
-    LaunchedEffect(state.isLoading) {
-        if (!state.isLoading) {
-            if (portState.text.isEmpty()) portState.edit { replace(0, length, state.inbound.inboundPort.toString()) }
-            if (listenState.text.isEmpty()) listenState.edit { replace(0, length, state.inbound.inboundListen) }
-            if (shadowsocksPasswordState.text.isEmpty()) shadowsocksPasswordState.edit { replace(0, length, state.inbound.shadowsocksPassword ?: "") }
-            if (vmessAlterIdState.text.isEmpty()) vmessAlterIdState.edit { replace(0, length, state.inbound.vmessAlterId.toString()) }
-            if (trojanPasswordState.text.isEmpty()) trojanPasswordState.edit { replace(0, length, state.inbound.trojanPassword ?: "") }
-            if (fallbackDestState.text.isEmpty()) fallbackDestState.edit { replace(0, length, state.inbound.fallbackDest.toString()) }
-        }
-    }
-
-    LaunchedEffect(portState.text) {
-        if (!state.isLoading) editScreenModel.processIntent(EditIntent.UpdateInboundPort(portState.text.toString().toIntOrNull() ?: 0))
-    }
-    LaunchedEffect(listenState.text) {
-        if (!state.isLoading) editScreenModel.processIntent(EditIntent.UpdateInboundListen(listenState.text.toString()))
-    }
-    LaunchedEffect(shadowsocksPasswordState.text) {
-        if (!state.isLoading) editScreenModel.processIntent(EditIntent.UpdateShadowsocksPassword(shadowsocksPasswordState.text.toString()))
-    }
-    LaunchedEffect(vmessAlterIdState.text) {
-        if (!state.isLoading) editScreenModel.processIntent(EditIntent.UpdateVmessAlterId(vmessAlterIdState.text.toString().toIntOrNull() ?: 0))
-    }
-    LaunchedEffect(trojanPasswordState.text) {
-        if (!state.isLoading) editScreenModel.processIntent(EditIntent.UpdateTrojanPassword(trojanPasswordState.text.toString()))
-    }
-    LaunchedEffect(fallbackDestState.text) {
-        if (!state.isLoading) editScreenModel.processIntent(EditIntent.UpdateFallbackDest(fallbackDestState.text.toString().toIntOrNull() ?: 0))
-    }
 
     val onSurface = MaterialTheme.colorScheme.onSurface
 
@@ -112,20 +77,14 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "Inbound Protocol", color = onSurface, modifier = Modifier)
-                    BlurredDropDown(
-                        blurHolder = globalBlurHolder,
-                        items = Configurations.protocol.entries.map { it.name },
-                        selectedItem = state.inbound.inboundProtocol.name,
-                        onItemSelected = { 
-                            scope.launch {
-                                editScreenModel.processIntent(
-                                    EditIntent.UpdateInboundProtocol(
-                                        Configurations.protocol.valueOf(it)
-                                    )
-                                )
-                            }
-                        }
+                    Text(text = "Listen Address", color = onSurface)
+                    SettingOutlinedText(
+                        state = editScreenModel.listenState,
+                        label = { Text("IP") },
+                        modifier = Modifier.weight(0.7f),
+                        isDone = false,
+                        keyboardType = KeyboardType.Number,
+                        inputTransformation = IpAutoFormatTransformation
                     )
                 }
             }
@@ -135,11 +94,12 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "Inbound Port", color = onSurface)
+                    Text(text = "Port", color = onSurface)
                     SettingOutlinedText(
-                        state = portState,
+                        state = editScreenModel.portState,
                         label = { Text("Port") },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.weight(0.7f),
+                        isDone = false,
                         keyboardType = KeyboardType.Number
                     )
                 }
@@ -150,57 +110,67 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "Inbound Listen", color = onSurface)
-                    SettingOutlinedText(
-                        state = listenState,
-                        label = { Text("Listen Interface") },
-                        modifier = Modifier.fillMaxWidth()
+                    Text(text = "Inbound Protocol", color = onSurface, modifier = Modifier)
+                    BlurredDropDown(
+                        blurHolder = globalBlurHolder,
+                        items = Configurations.inboundProtocol.entries.map { it.name },
+                        selectedItem = state.inbound.inboundProtocol.name,
+                        onItemSelected = { 
+                            scope.launch {
+                                editScreenModel.processIntent(
+                                    EditIntent.UpdateInboundProtocol(
+                                        Configurations.inboundProtocol.valueOf(it)
+                                    )
+                                )
+                            }
+                        }
                     )
                 }
             }
-
-            when (state.inbound.inboundProtocol) {
-                Configurations.protocol.SHADOWSOCKS -> {
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(text = "Shadowsocks encryption method", color = onSurface, modifier = Modifier) 
-                            BlurredDropDown(
-                                blurHolder = globalBlurHolder,
-                                items = Configurations.shadowsocksMethod.entries.map { it.name },
-                                selectedItem = state.inbound.shadowsocksMethod?.name ?: Configurations.shadowsocksMethod.AES_128_GCM.name,
-                                onItemSelected = {
-                                    scope.launch {
-                                        editScreenModel.processIntent(
-                                            EditIntent.UpdateShadowsocksMethod(
-                                                Configurations.shadowsocksMethod.valueOf(it)
-                                            )
-                                        )
-                                    }
-                                }
-                            )
-                        }
+            item {
+                when (state.inbound.inboundProtocol) {
+                    Configurations.inboundProtocol.SHADOWSOCKS -> {
+                        ShadowsocksConfiguration(
+                            globalBlurHolder = globalBlurHolder,
+                            editScreenModel = editScreenModel,
+                            state = state,
+                            scope = scope,
+                            shadowsocksPasswordState = editScreenModel.shadowsocksPasswordState,
+                            onSurface = onSurface,
+                            onGenerateClick = {
+                                editScreenModel.generateUuid()
+                                editScreenModel.shadowsocksPasswordState.setTextAndPlaceCursorAtEnd(editScreenModel.uuid.value)
+                            }
+                        )
                     }
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                    Configurations.inboundProtocol.VLESS -> {
+                        val vlessSettings = state.inbound.settings as? XrayConfig.VlessInboundSettings
+                        VlessSettings(
+                            users = vlessSettings?.users ?: emptyList(),
+                            editScreenModel = editScreenModel,
+                            onSurface = onSurface,
+                            globalBlurHolder = globalBlurHolder,
+                        )
+                        Button(
+                            modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                            onClick = {
+                                val currentSettings = state.inbound.settings as? XrayConfig.VlessInboundSettings
+                                    ?: XrayConfig.VlessInboundSettings()
+                                val newUser = XrayConfig.VlessUser(id = editScreenModel.uuid.value)
+                                editScreenModel.processIntent(
+                                    EditIntent.UpdateInbound(
+                                        state.inbound.copy(
+                                            settings = currentSettings.copy(users = currentSettings.users + newUser)
+                                        )
+                                    )
+                                )
+                            }
                         ) {
-                            Text(text = "Shadowsocks password", color = onSurface, modifier = Modifier)
-                            CryptoTextField(
-                                state = shadowsocksPasswordState,
-                                label = "Shadowsocks password",
-                                onGenerateClick = { /*TODO*/ },
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                            Text("add user")
                         }
+                        VlessStreamSettings()
                     }
                 }
-                else -> { /* Other protocols have generic or no settings here for now */ }
             }
 
             item {
@@ -211,7 +181,7 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
                 ) {
                     Text(text = "Fallback Destination", color = onSurface)
                     SettingOutlinedText(
-                        state = fallbackDestState,
+                        state = editScreenModel.fallbackDestState,
                         label = { Text("Port") },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardType = KeyboardType.Number

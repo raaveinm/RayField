@@ -1,21 +1,15 @@
 package com.raaveinm.rayfield.ui.state.configuration
 
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.raaveinm.rayfield.data.database.ServerDao
-import com.raaveinm.rayfield.data.xray.Configurations
-import com.raaveinm.rayfield.data.xray.XrayConfig
-import com.raaveinm.rayfield.data.xray.types.ServerState
-import com.raaveinm.rayfield.domain.helpers.Logger
 import com.raaveinm.rayfield.domain.xray.CypherService
-import com.raaveinm.rayfield.domain.xray.ShareLinkGenerator
-import com.raaveinm.rayfield.domain.xray.XrayConfigBuilder
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.decodeFromJsonElement
 
 //
 // Created by Kirill "Raaveinm" on 5/11/26.
@@ -26,6 +20,15 @@ class EditScreenModel(
     private val cypherService: CypherService,
     private val initialServerId: String? = null
 ) : ScreenModel {
+    val connectionNameState = TextFieldState()
+    val serverAddressState = TextFieldState()
+    val portState = TextFieldState()
+    val listenState = TextFieldState()
+    val shadowsocksPasswordState = TextFieldState()
+    val vmessAlterIdState = TextFieldState()
+    val trojanPasswordState = TextFieldState()
+    val fallbackDestState = TextFieldState()
+
     private val _state = MutableStateFlow(
         EditDraftState(
             serverId = initialServerId ?: "",
@@ -44,6 +47,9 @@ class EditScreenModel(
             if (initialServerId != null) {
                 val server = serverDao.getServerUnitById(initialServerId)
                 if (server != null) {
+                    connectionNameState.setTextAndPlaceCursorAtEnd(server.serverName ?: "")
+                    serverAddressState.setTextAndPlaceCursorAtEnd(server.serverIp)
+                    
                     _state.update { it.copy(
                         serverId = server.serverId,
                         connectionName = server.serverName ?: "",
@@ -51,11 +57,32 @@ class EditScreenModel(
                         isLoading = false
                     ) }
                     // TODO: Parse server.serverJsonConfig if present to fill other fields
-                } else {
+                    
+                    // For now, let's use the current state values to initialize TextFieldStates
+                    val s = _state.value
+                    portState.setTextAndPlaceCursorAtEnd(s.inbound.inboundPort.toString())
+                    listenState.setTextAndPlaceCursorAtEnd(s.inbound.inboundListen)
+                    shadowsocksPasswordState.setTextAndPlaceCursorAtEnd(s.inbound.shadowsocksPassword ?: "")
+                    vmessAlterIdState.setTextAndPlaceCursorAtEnd(s.inbound.vmessAlterId.toString())
+                    trojanPasswordState.setTextAndPlaceCursorAtEnd(s.inbound.trojanPassword ?: "")
+                    fallbackDestState.setTextAndPlaceCursorAtEnd(s.inbound.fallbackDest.toString())
+                }
+else {
                     _state.update { it.copy(isLoading = false) }
                 }
             } else {
                 _state.update { it.copy(isLoading = false) }
+                
+                // Initialize with default values if new
+                val s = _state.value
+                connectionNameState.setTextAndPlaceCursorAtEnd(s.connectionName)
+                serverAddressState.setTextAndPlaceCursorAtEnd(s.serverAddress)
+                portState.setTextAndPlaceCursorAtEnd(s.inbound.inboundPort.toString())
+                listenState.setTextAndPlaceCursorAtEnd(s.inbound.inboundListen)
+                shadowsocksPasswordState.setTextAndPlaceCursorAtEnd(s.inbound.shadowsocksPassword ?: "")
+                vmessAlterIdState.setTextAndPlaceCursorAtEnd(s.inbound.vmessAlterId.toString())
+                trojanPasswordState.setTextAndPlaceCursorAtEnd(s.inbound.trojanPassword ?: "")
+                fallbackDestState.setTextAndPlaceCursorAtEnd(s.inbound.fallbackDest.toString())
             }
         }
     }
@@ -78,16 +105,25 @@ class EditScreenModel(
             is EditIntent.UpdateOutbound -> _state.update { it.copy(outbound = intent.outbound) }
             is EditIntent.UpdatePro -> _state.update { it.copy(pro = intent.pro) }
             
-            EditIntent.Save -> {
-                screenModelScope.launch {
-                    saveServer()
-                }
-            }
+            EditIntent.Save -> { screenModelScope.launch { saveServer() } }
             EditIntent.Cancel -> { /* Handle cancel */ }
         }
     }
 
     suspend fun saveServer() {
+        // Sync TextFieldStates back to state before saving
+        _state.update { it.copy(
+            connectionName = connectionNameState.text.toString(),
+            serverAddress = serverAddressState.text.toString(),
+            inbound = it.inbound.copy(
+                inboundPort = portState.text.toString().toIntOrNull() ?: 0,
+                inboundListen = listenState.text.toString(),
+                shadowsocksPassword = shadowsocksPasswordState.text.toString(),
+                vmessAlterId = vmessAlterIdState.text.toString().toIntOrNull() ?: 0,
+                trojanPassword = trojanPasswordState.text.toString(),
+                fallbackDest = fallbackDestState.text.toString().toIntOrNull() ?: 0
+            )
+        ) }
         val configuration = _state.value
     }
 

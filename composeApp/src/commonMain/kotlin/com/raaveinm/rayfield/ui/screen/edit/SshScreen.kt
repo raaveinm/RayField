@@ -8,13 +8,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,43 +52,6 @@ fun Screen.SshScreen(serverId: String? = null) {
     val options = listOf("Password", "Key")
     var loginState by remember { mutableStateOf(options.first()) }
 
-    val ipState = remember { TextFieldState() }
-    val portState = remember { TextFieldState() }
-    val sshUserState = remember { TextFieldState() }
-    val passwordState = remember { TextFieldState() }
-    val pathToFileState = remember { TextFieldState() }
-    val serverName = remember { TextFieldState() }
-
-    LaunchedEffect(state.isLoading) {
-        if (!state.isLoading && state.serverId.isNotEmpty()) {
-            if (ipState.text.isEmpty()) ipState.edit { replace(0, length, state.ip) }
-            if (portState.text.isEmpty()) portState.edit { replace(0, length, state.port) }
-            if (sshUserState.text.isEmpty()) sshUserState.edit { replace(0, length, state.login) }
-            if (passwordState.text.isEmpty()) passwordState.edit { replace(0, length, state.password ?: "") }
-            if (pathToFileState.text.isEmpty()) pathToFileState.edit { replace(0, length, state.pathToPkey ?: "") }
-            if (serverName.text.isEmpty()) serverName.edit { replace(0, length, state.name) }
-        }
-    }
-
-    LaunchedEffect(ipState.text) {
-        if (!state.isLoading) screenModel.processIntent(SshIntent.UpdateIp(ipState.text.toString()))
-    }
-    LaunchedEffect(portState.text) {
-        if (!state.isLoading) screenModel.processIntent(SshIntent.UpdatePort(portState.text.toString()))
-    }
-    LaunchedEffect(sshUserState.text) {
-        if (!state.isLoading) screenModel.processIntent(SshIntent.UpdateLogin(sshUserState.text.toString()))
-    }
-    LaunchedEffect(passwordState.text) {
-        if (!state.isLoading) screenModel.processIntent(SshIntent.UpdatePassword(passwordState.text.toString()))
-    }
-    LaunchedEffect(pathToFileState.text) {
-        if (!state.isLoading) screenModel.processIntent(SshIntent.UpdatePathToPkey(pathToFileState.text.toString()))
-    }
-    LaunchedEffect(serverName.text) {
-        if (!state.isLoading) screenModel.processIntent(SshIntent.UpdateName(serverName.text.toString()))
-    }
-
     Box(
         Modifier
             .fillMaxSize()
@@ -118,7 +79,7 @@ fun Screen.SshScreen(serverId: String? = null) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     SettingOutlinedText(
-                        state = ipState,
+                        state = screenModel.ipState,
                         label = { Text("Server IP") },
                         modifier = Modifier.weight(0.7f),
                         isDone = false,
@@ -127,7 +88,7 @@ fun Screen.SshScreen(serverId: String? = null) {
                     )
 
                     SettingOutlinedText(
-                        state = portState,
+                        state = screenModel.portState,
                         label = { Text("Port") },
                         modifier = Modifier.weight(0.3f),
                         isDone = false,
@@ -138,7 +99,7 @@ fun Screen.SshScreen(serverId: String? = null) {
 
             item {
                 SettingOutlinedText(
-                    state = sshUserState,
+                    state = screenModel.loginState,
                     label = { Text("User") },
                     modifier = Modifier.fillMaxWidth(),
                     isDone = false
@@ -164,7 +125,7 @@ fun Screen.SshScreen(serverId: String? = null) {
             item {
                 if (loginState == "Password") {
                     SettingOutlinedText(
-                        state = passwordState,
+                        state = screenModel.passwordState,
                         label = { Text("Password") },
                         modifier = Modifier.fillMaxWidth(),
                         isPassword = true
@@ -174,14 +135,14 @@ fun Screen.SshScreen(serverId: String? = null) {
                         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                         contentAlignment = Alignment.CenterStart
                     ) {
-                        Text("FilePicker ${pathToFileState.text}", color = Color.Cyan)
+                        Text("FilePicker ${screenModel.pathToPkeyState.text}", color = Color.Cyan)
                     }
                 }
             }
 
             item {
                 SettingOutlinedText(
-                    state = serverName,
+                    state = screenModel.nameState,
                     label = { Text("server displayed name") },
                     modifier = Modifier.fillMaxWidth(),
                     isDone = true,

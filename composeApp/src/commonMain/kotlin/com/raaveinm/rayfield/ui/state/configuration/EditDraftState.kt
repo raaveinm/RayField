@@ -24,14 +24,14 @@ data class EditDraftState (
 data class InboundDraftState(
     val inboundListen: String = "0.0.0.0",
     val inboundPort: Int = 443,
-    val inboundProtocol: Configurations.protocol = Configurations.protocol.VLESS,
+    val inboundProtocol: Configurations.inboundProtocol = Configurations.inboundProtocol.VLESS,
     val inboundId: String = "",
     val shadowsocksPassword: String? = null,
     val shadowsocksMethod: Configurations.shadowsocksMethod? = null,
     val vmessAlterId: Int = 0,
     val trojanPassword: String? = null,
     val fallbackDest: Int = 0,
-    val settings: Any = Unit,
+    val settings: XrayConfig.InboundSettings = XrayConfig.VlessInboundSettings(),
     val streamSettings: StreamDraftState = StreamDraftState(),
     val tag: String? = null,
     val sniffing: XrayConfig.SniffingObject? = null
@@ -75,7 +75,7 @@ sealed interface EditIntent {
     // --- Inbound Updates ---
     data class UpdateInboundPort(val port: Int) : EditIntent
     data class UpdateInboundListen(val listen: String) : EditIntent
-    data class UpdateInboundProtocol(val protocol: Configurations.protocol) : EditIntent
+    data class UpdateInboundProtocol(val protocol: Configurations.inboundProtocol) : EditIntent
     data class UpdateInboundId(val id: String) : EditIntent
     data class UpdateShadowsocksPassword(val password: String) : EditIntent
     data class UpdateShadowsocksMethod(val method: Configurations.shadowsocksMethod) : EditIntent

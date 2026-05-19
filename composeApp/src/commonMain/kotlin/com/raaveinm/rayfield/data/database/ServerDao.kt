@@ -47,4 +47,12 @@ interface ServerDao {
 
     @Delete
     suspend fun deleteServerState(state: ServerState)
+
+    @Transaction
+    @Query("SELECT * FROM server_units")
+    fun getAllServersWithStates(): Flow<List<ServerWithState>>
+
+    @Transaction
+    @Query("SELECT * FROM server_units WHERE serverId = :id")
+    suspend fun getServerWithStatesById(id: String): ServerWithState?
 }
