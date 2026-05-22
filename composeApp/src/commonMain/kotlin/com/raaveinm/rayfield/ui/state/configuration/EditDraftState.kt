@@ -28,6 +28,9 @@ data class InboundDraftState(
     val inboundId: String = "",
     val shadowsocksPassword: String? = null,
     val shadowsocksMethod: Configurations.shadowsocksMethod? = null,
+    val shadowsocksNetwork: Configurations.shadowSocksNetwork = Configurations.shadowSocksNetwork.TCP_UDP,
+    val shadowsocksEmail: String = "love@xray.com",
+    val shadowsocksUsers: List<XrayConfig.ShadowsocksUser> = emptyList(),
     val vmessAlterId: Int = 0,
     val trojanPassword: String? = null,
     val fallbackDest: Int = 0,
@@ -53,6 +56,7 @@ data class OutboundDraftState(
     val sendThrough: String? = null,
     val tag: String? = null,
     val protocol: Configurations.protocol = Configurations.protocol.FREEDOM,
+    val shadowsocksMethod: Configurations.shadowsocksMethod? = null,
     val settings: JsonObject? = null,
     val streamSettings: StreamDraftState? = null,
     val proxySettings: XrayConfig.ProxySettings? = null,
@@ -79,13 +83,26 @@ sealed interface EditIntent {
     data class UpdateInboundId(val id: String) : EditIntent
     data class UpdateShadowsocksPassword(val password: String) : EditIntent
     data class UpdateShadowsocksMethod(val method: Configurations.shadowsocksMethod) : EditIntent
+    data class UpdateShadowsocksNetwork(val network: Configurations.shadowSocksNetwork) : EditIntent
+    data class UpdateShadowsocksEmail(val email: String) : EditIntent
+    data class UpdateShadowsocksUsers(val users: List<XrayConfig.ShadowsocksUser>) : EditIntent
     data class UpdateVmessAlterId(val alterId: Int) : EditIntent
     data class UpdateTrojanPassword(val password: String) : EditIntent
     data class UpdateFallbackDest(val port: Int) : EditIntent
+
+    // --- Outbound Updates ---
+    data class UpdateOutboundProtocol(val protocol: Configurations.protocol) : EditIntent
+    data class UpdateOutboundShadowsocksMethod(val method: Configurations.shadowsocksMethod) : EditIntent
 
     // --- Bulk Updates ---
     data class UpdateInbound(val inbound: InboundDraftState) : EditIntent
     data class UpdateStream(val stream: StreamDraftState) : EditIntent
     data class UpdateOutbound(val outbound: OutboundDraftState) : EditIntent
     data class UpdatePro(val pro: ProDraftState) : EditIntent
+
+    data class UpdateStreamNetwork(val network: Configurations.transportNetwork) : EditIntent
+    data class UpdateStreamSecurity(val security: Configurations.security) : EditIntent
+    data class UpdateRealityFingerprint(val fingerprint: Configurations.fingerprint) : EditIntent
+    data class UpdateTlsFingerprint(val fingerprint: Configurations.fingerprint) : EditIntent
+    data class UpdateRealityTarget(val target: Configurations.targetOptions) : EditIntent
 }

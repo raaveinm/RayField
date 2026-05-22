@@ -33,9 +33,8 @@ val Tab.tabIndex: Int
         is AddServerTab -> 4
         is SshTab -> 0
         is InboundTab -> 1
-        is StreamTab -> 2
-        is OutboundTab -> 3
-        is ProTab -> 4
+        is OutboundTab -> 2
+        is ProTab -> 3
         else -> 0
     }
 

@@ -83,6 +83,7 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
                         label = { Text("IP") },
                         modifier = Modifier.weight(0.7f),
                         isDone = false,
+                        isError = editScreenModel.listenState.text.toString().isEmpty(),
                         keyboardType = KeyboardType.Number,
                         inputTransformation = IpAutoFormatTransformation
                     )
@@ -99,6 +100,7 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
                         state = editScreenModel.portState,
                         label = { Text("Port") },
                         modifier = Modifier.weight(0.7f),
+                        isError = editScreenModel.listenState.text.toString().isEmpty(),
                         isDone = false,
                         keyboardType = KeyboardType.Number
                     )
@@ -136,6 +138,7 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
                             state = state,
                             scope = scope,
                             shadowsocksPasswordState = editScreenModel.shadowsocksPasswordState,
+                            shadowsocksEmailState = editScreenModel.shadowsocksEmailState,
                             onSurface = onSurface,
                             onGenerateClick = {
                                 editScreenModel.generateUuid()
@@ -151,24 +154,11 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
                             onSurface = onSurface,
                             globalBlurHolder = globalBlurHolder,
                         )
-                        Button(
-                            modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                            onClick = {
-                                val currentSettings = state.inbound.settings as? XrayConfig.VlessInboundSettings
-                                    ?: XrayConfig.VlessInboundSettings()
-                                val newUser = XrayConfig.VlessUser(id = editScreenModel.uuid.value)
-                                editScreenModel.processIntent(
-                                    EditIntent.UpdateInbound(
-                                        state.inbound.copy(
-                                            settings = currentSettings.copy(users = currentSettings.users + newUser)
-                                        )
-                                    )
-                                )
-                            }
-                        ) {
-                            Text("add user")
-                        }
-                        VlessStreamSettings()
+                        VlessStreamSettings(
+                            editScreenModel = editScreenModel,
+                            globalBlurHolder = globalBlurHolder,
+                            onSurface = onSurface
+                        )
                     }
                 }
             }

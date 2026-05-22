@@ -83,6 +83,7 @@ fun Screen.SshScreen(serverId: String? = null) {
                         label = { Text("Server IP") },
                         modifier = Modifier.weight(0.7f),
                         isDone = false,
+                        isError = screenModel.ipState.text.toString().isEmpty(),
                         keyboardType = KeyboardType.Number,
                         inputTransformation = IpAutoFormatTransformation
                     )
@@ -91,6 +92,7 @@ fun Screen.SshScreen(serverId: String? = null) {
                         state = screenModel.portState,
                         label = { Text("Port") },
                         modifier = Modifier.weight(0.3f),
+                        isError = screenModel.portState.text.toString().isEmpty(),
                         isDone = false,
                         keyboardType = KeyboardType.Number
                     )
@@ -101,6 +103,7 @@ fun Screen.SshScreen(serverId: String? = null) {
                 SettingOutlinedText(
                     state = screenModel.loginState,
                     label = { Text("User") },
+                    isError = screenModel.loginState.text.toString().isEmpty(),
                     modifier = Modifier.fillMaxWidth(),
                     isDone = false
                 )
