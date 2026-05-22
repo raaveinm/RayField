@@ -19,7 +19,7 @@ import com.raaveinm.rayfield.ui.screen.edit.SshScreen
 //
 
 data class SshTab(
-    val serverId: String? = null
+    val serverId: String? = null,
 ) : Tab {
     override val options: TabOptions
         @Composable get() = TabOptions(index = 0u, title = "SSH")
@@ -31,7 +31,7 @@ data class SshTab(
 
 data class InboundTab(
     val configId: String? = null,
-    val serverId: String? = null
+    val serverId: String? = null,
 ) : Tab {
     override val options: TabOptions
         @Composable get() = TabOptions(index = 1u, title = "Inbound")

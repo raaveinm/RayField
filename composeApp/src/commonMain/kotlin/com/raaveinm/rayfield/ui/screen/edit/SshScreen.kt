@@ -25,17 +25,15 @@ import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.koin.koinScreenModel
 import com.raaveinm.rayfield.ui.adapters.AdaptivePadding
 import com.raaveinm.rayfield.ui.adapters.IpAutoFormatTransformation
 import com.raaveinm.rayfield.ui.fragments.ConnectedButtonGroup
 import com.raaveinm.rayfield.ui.fragments.edit.SettingOutlinedText
+import com.raaveinm.rayfield.ui.screen.LocalSharedEditModel
 import com.raaveinm.rayfield.ui.state.GlobalBlurHolder
-import com.raaveinm.rayfield.ui.state.configuration.SshIntent
-import com.raaveinm.rayfield.ui.state.configuration.SshScreenModel
+import com.raaveinm.rayfield.ui.state.configuration.EditIntent
 import io.github.neilyich.glassmorphism.blurredBackground
 import io.github.neilyich.glassmorphism.rememberBlurHolder
-import org.koin.core.parameter.parametersOf
 
 //
 // Created by Kirill "Raaveinm" on 5/4/26.
@@ -43,8 +41,8 @@ import org.koin.core.parameter.parametersOf
 
 @Composable
 fun Screen.SshScreen(serverId: String? = null) {
-    val screenModel = koinScreenModel<SshScreenModel> { parametersOf(serverId) }
-    val state by screenModel.state.collectAsState()
+    val editScreenModel = LocalSharedEditModel.current
+    val state by editScreenModel.state.collectAsState()
 
     val globalBlurHolder = GlobalBlurHolder.current ?: rememberBlurHolder()
     val lazyState = rememberLazyListState()
@@ -72,106 +70,105 @@ fun Screen.SshScreen(serverId: String? = null) {
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    SettingOutlinedText(
-                        state = screenModel.ipState,
-                        label = { Text("Server IP") },
-                        modifier = Modifier.weight(0.7f),
-                        isDone = false,
-                        isError = screenModel.ipState.text.toString().isEmpty(),
-                        keyboardType = KeyboardType.Number,
-                        inputTransformation = IpAutoFormatTransformation
-                    )
-
-                    SettingOutlinedText(
-                        state = screenModel.portState,
-                        label = { Text("Port") },
-                        modifier = Modifier.weight(0.3f),
-                        isError = screenModel.portState.text.toString().isEmpty(),
-                        isDone = false,
-                        keyboardType = KeyboardType.Number
-                    )
-                }
-            }
-
-            item {
-                SettingOutlinedText(
-                    state = screenModel.loginState,
-                    label = { Text("User") },
-                    isError = screenModel.loginState.text.toString().isEmpty(),
-                    modifier = Modifier.fillMaxWidth(),
-                    isDone = false
-                )
-            }
-
-
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(text = "SSH Auth Method", color = MaterialTheme.colorScheme.onSurface)
-                    ConnectedButtonGroup(
-                        options = options,
-                        selectedOption = loginState,
-                        onOptionSelected = { selectedOption -> loginState = selectedOption }
-                    )
-                }
-            }
-
-            item {
-                if (loginState == "Password") {
-                    SettingOutlinedText(
-                        state = screenModel.passwordState,
-                        label = { Text("Password") },
+                item {
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        isPassword = true
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                        contentAlignment = Alignment.CenterStart
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("FilePicker ${screenModel.pathToPkeyState.text}", color = Color.Cyan)
+                        SettingOutlinedText(
+                            state = editScreenModel.serverAddressState,
+                            label = { Text("Server IP") },
+                            modifier = Modifier.weight(0.7f),
+                            isDone = false,
+                            isError = editScreenModel.serverAddressState.text.toString().isEmpty(),
+                            keyboardType = KeyboardType.Number,
+                            inputTransformation = IpAutoFormatTransformation
+                        )
+
+                        SettingOutlinedText(
+                            state = editScreenModel.sshPortState,
+                            label = { Text("Port") },
+                            modifier = Modifier.weight(0.3f),
+                            isError = editScreenModel.sshPortState.text.toString().isEmpty(),
+                            isDone = false,
+                            keyboardType = KeyboardType.Number
+                        )
                     }
                 }
-            }
 
-            item {
-                SettingOutlinedText(
-                    state = screenModel.nameState,
-                    label = { Text("server displayed name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    isDone = true,
-                    onKeyboardAction = {
-                        screenModel.processIntent(SshIntent.Save)
-                    }
-                )
-
-            }
-
-            item {
-                Button(
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                    onClick = { screenModel.processIntent(SshIntent.Save) }
-                ) {
-                    Text("Save Server Configuration")
+                item {
+                    SettingOutlinedText(
+                        state = editScreenModel.sshLoginState,
+                        label = { Text("User") },
+                        isError = editScreenModel.sshLoginState.text.toString().isEmpty(),
+                        modifier = Modifier.fillMaxWidth(),
+                        isDone = false
+                    )
                 }
-            }
 
 
-            item {
-                Text("server id: ${state.serverId}\nserver name: ${state.name}\nserver ip: " +
-                        "${state.ip}\n server login: ${state.login}\nserver password: " +
-                        "${state.password}\nserver port: ${state.port}\n",  color = Color.Cyan)
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = "SSH Auth Method", color = MaterialTheme.colorScheme.onSurface)
+                        ConnectedButtonGroup(
+                            options = options,
+                            selectedOption = loginState,
+                            onOptionSelected = { selectedOption -> loginState = selectedOption }
+                        )
+                    }
+                }
+
+                item {
+                    if (loginState == "Password") {
+                        SettingOutlinedText(
+                            state = editScreenModel.sshPasswordState,
+                            label = { Text("Password") },
+                            modifier = Modifier.fillMaxWidth(),
+                            isPassword = true
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Text("FilePicker ${editScreenModel.sshPathToPkeyState.text}", color = Color.Cyan)
+                        }
+                    }
+                }
+
+                item {
+                    SettingOutlinedText(
+                        state = editScreenModel.connectionNameState,
+                        label = { Text("server displayed name") },
+                        modifier = Modifier.fillMaxWidth(),
+                        isDone = true,
+                        onKeyboardAction = {
+                            editScreenModel.processIntent(EditIntent.Save)
+                        }
+                    )
+
+                }
+
+                item {
+                    androidx.compose.material3.HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                    )
+                }
+                item {
+                    Button(
+                        modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                        onClick = { editScreenModel.processIntent(EditIntent.Save) }
+                    ) {
+                        Text("Save Server Configuration")
+                    }
+                }
             }
         }
     }
-}
 }

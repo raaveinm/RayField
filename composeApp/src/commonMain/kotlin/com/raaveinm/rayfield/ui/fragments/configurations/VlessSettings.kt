@@ -6,11 +6,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +33,7 @@ import com.raaveinm.rayfield.ui.fragments.BlurredDropDown
 import com.raaveinm.rayfield.ui.fragments.edit.SettingOutlinedText
 import com.raaveinm.rayfield.ui.state.configuration.EditIntent
 import com.raaveinm.rayfield.ui.state.configuration.EditScreenModel
+import com.raaveinm.rayfield.ui.theme.LocalDimensions
 import io.github.neilyich.glassmorphism.BlurHolder
 
 //
@@ -48,12 +51,11 @@ fun VlessSettings(
 
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(LocalDimensions.current.mediumPadding),
     ) {
         users.forEachIndexed { index, user ->
             key(user.id) {
                 val userEmailState = rememberTextFieldState(user.email)
-                val userIdState = rememberTextFieldState(user.id)
 
                 // Sync from TextFieldState to Model
                 LaunchedEffect(userEmailState.text, index) {
@@ -71,40 +73,20 @@ fun VlessSettings(
                     }
                 }
 
-                LaunchedEffect(userIdState.text, index) {
-                    val currentSettings =
-                        state.inbound.settings as? XrayConfig.VlessInboundSettings ?: return@LaunchedEffect
-                    val newId = userIdState.text.toString()
-                    if (index < currentSettings.users.size && currentSettings.users[index].id != newId) {
-                        val updatedUsers = currentSettings.users.toMutableList()
-                        updatedUsers[index] = updatedUsers[index].copy(id = newId)
-                        editScreenModel.processIntent(
-                            EditIntent.UpdateInbound(
-                                state.inbound.copy(settings = currentSettings.copy(users = updatedUsers))
-                            )
-                        )
-                    }
-                }
-
                 // Sync from Model to TextFieldState (in case of external changes, e.g. generation)
                 LaunchedEffect(user.email) {
                     if (userEmailState.text.toString() != user.email) {
                         userEmailState.setTextAndPlaceCursorAtEnd(user.email)
                     }
                 }
-                LaunchedEffect(user.id) {
-                    if (userIdState.text.toString() != user.id) {
-                        userIdState.setTextAndPlaceCursorAtEnd(user.id)
-                    }
-                }
 
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(LocalDimensions.current.smallPadding)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(LocalDimensions.current.mediumPadding),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
@@ -136,7 +118,7 @@ fun VlessSettings(
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(LocalDimensions.current.mediumPadding),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(text = "Email", color = onSurface, modifier = Modifier.width(64.dp))
@@ -149,19 +131,22 @@ fun VlessSettings(
                     }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(LocalDimensions.current.mediumPadding),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(text = "UUID", color = onSurface, modifier = Modifier.width(64.dp))
-                        SettingOutlinedText(
-                            state = userIdState,
-                            label = { Text("ID") },
-                            modifier = Modifier.fillMaxWidth(),
-                        )
+                        androidx.compose.foundation.text.selection.SelectionContainer {
+                            Text(
+                                text = user.id,
+                                color = onSurface.copy(alpha = 0.7f),
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(vertical = LocalDimensions.current.smallPadding)
+                            )
+                        }
                     }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(LocalDimensions.current.mediumPadding),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(text = "Flow", color = onSurface, modifier = Modifier.width(64.dp))
@@ -187,28 +172,38 @@ fun VlessSettings(
                     }
                 }
             }
-            Button(
-                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                onClick = {
-                    val currentSettings = state.inbound.settings as? XrayConfig.VlessInboundSettings
-                        ?: XrayConfig.VlessInboundSettings()
-                    val newUser = XrayConfig.VlessUser(id = editScreenModel.uuid.value)
-                    editScreenModel.processIntent(
-                        EditIntent.UpdateInbound(
-                            state.inbound.copy(
-                                settings = currentSettings.copy(users = currentSettings.users + newUser)
-                            )
+        }
+
+        Button(
+            modifier = Modifier.wrapContentWidth().padding(top = LocalDimensions.current.mediumPadding),
+            onClick = {
+                editScreenModel.generateUuid()
+                val currentSettings = state.inbound.settings as? XrayConfig.VlessInboundSettings
+                    ?: XrayConfig.VlessInboundSettings()
+                val newUser = XrayConfig.VlessUser(
+                    id = editScreenModel.uuid.value,
+                    email = "user${currentSettings.users.size + 1}@rayfield.com"
+                )
+                editScreenModel.processIntent(
+                    EditIntent.UpdateInbound(
+                        state.inbound.copy(
+                            settings = currentSettings.copy(users = currentSettings.users + newUser)
                         )
                     )
-                }
-            ) {
-                Text("add user")
+                )
             }
+        ) {
+            Text("add user")
         }
+
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = LocalDimensions.current.smallPadding),
+            color = onSurface.copy(alpha = 0.2f)
+        )
 
         Row (
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(LocalDimensions.current.mediumPadding),
             verticalAlignment = Alignment.CenterVertically
         ){
             Text(
@@ -236,9 +231,14 @@ fun VlessSettings(
             )
         }
 
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = LocalDimensions.current.smallPadding),
+            color = onSurface.copy(alpha = 0.2f)
+        )
+
         Row (
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(LocalDimensions.current.mediumPadding),
             verticalAlignment = Alignment.CenterVertically
         ){
             Text(

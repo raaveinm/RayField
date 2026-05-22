@@ -2,6 +2,7 @@ package com.raaveinm.rayfield.ui.screen.edit
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -11,22 +12,20 @@ import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.koin.koinScreenModel
 import com.raaveinm.rayfield.data.xray.Configurations
 import com.raaveinm.rayfield.ui.adapters.AdaptivePadding
-import com.raaveinm.rayfield.ui.adapters.IpAutoFormatTransformation
 import com.raaveinm.rayfield.ui.fragments.BlurredDropDown
 import com.raaveinm.rayfield.ui.fragments.edit.SettingOutlinedText
+import com.raaveinm.rayfield.ui.screen.LocalSharedEditModel
 import com.raaveinm.rayfield.ui.state.GlobalBlurHolder
 import com.raaveinm.rayfield.ui.state.configuration.EditIntent
-import com.raaveinm.rayfield.ui.state.configuration.EditScreenModel
 import io.github.neilyich.glassmorphism.blurredBackground
 import io.github.neilyich.glassmorphism.rememberBlurHolder
 
 @Composable
 fun Screen.OutboundScreen() {
     val globalBlurHolder = GlobalBlurHolder.current ?: rememberBlurHolder()
-    val editScreenModel = koinScreenModel<EditScreenModel>()
+    val editScreenModel = LocalSharedEditModel.current
     val state by editScreenModel.state.collectAsState()
     val outbound = state.outbound
     val onSurface = MaterialTheme.colorScheme.onSurface
@@ -75,10 +74,17 @@ fun Screen.OutboundScreen() {
                     modifier = Modifier.fillMaxWidth()
                 )
             }
+
             ///////////////////////////////////////////////
             // Dynamic Protocol Configuration
             ///////////////////////////////////////////////
             if (outbound.protocol == Configurations.protocol.VLESS || outbound.protocol == Configurations.protocol.SHADOWSOCKS) {
+                item {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        color = onSurface.copy(alpha = 0.2f)
+                    )
+                }
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -87,10 +93,7 @@ fun Screen.OutboundScreen() {
                         SettingOutlinedText(
                             state = editScreenModel.outboundAddressState,
                             label = { Text("Server Address") },
-                            modifier = Modifier.weight(0.7f),
-                            isDone = false,
-                            keyboardType = KeyboardType.Number,
-                            inputTransformation = IpAutoFormatTransformation
+                            modifier = Modifier.weight(0.7f)
                         )
                         SettingOutlinedText(
                             state = editScreenModel.outboundPortState,
@@ -108,7 +111,7 @@ fun Screen.OutboundScreen() {
                             label = { Text("VLESS User UUID") },
                             modifier = Modifier.fillMaxWidth()
                         )
-                    } else {
+                    } else if (outbound.protocol == Configurations.protocol.SHADOWSOCKS) {
                         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -133,6 +136,14 @@ fun Screen.OutboundScreen() {
                             )
                         }
                     }
+                }
+            }
+            item {
+                androidx.compose.material3.Button(
+                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                    onClick = { editScreenModel.processIntent(EditIntent.Save) }
+                ) {
+                    Text("Save Outbound Configuration")
                 }
             }
         }

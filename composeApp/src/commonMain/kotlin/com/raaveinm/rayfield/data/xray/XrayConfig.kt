@@ -6,6 +6,7 @@ package com.raaveinm.rayfield.data.xray
 // Created by Kirill "Raaveinm" on 4/29/26.
 //
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -103,7 +104,7 @@ data class XrayConfig(
 
     @Serializable
     data class OutboundConfig(
-        val sendThrough: String? = "", // outbound proxy
+        val sendThrough: String? = null, // outbound proxy
         val tag: String? = null,
         val protocol: Configurations.protocol = Configurations.protocol.FREEDOM, // X-Ray outbound protocol
         val settings: JsonObject? = null, // Protocol-specific settings
@@ -134,10 +135,13 @@ data class XrayConfig(
     @Serializable
     data class RealitySettings (
         val dest: String? = null,
+        @SerialName("_rf_target")
         val target: Configurations.targetOptions? = Configurations.targetOptions.GITHUB, // target mask or ip
+        @SerialName("_rf_customTarget")
         val customTarget: String? = null, // same, but with manual mask site input
         val serverNames: List<String>, // Domain names of mask servers
         val privateKey: String, // Generated UUID @XrayKeyPair
+        @SerialName("_rf_publicKey")
         val password: String, // public Key (Generated UUID) @XrayKeyPair
         val shortIds: List<String> = emptyList(), // Short allowed IDs
         val show: Boolean = false, // distinguish different clients

@@ -46,7 +46,9 @@ fun BlurredDropDown(
     var anchorWidth by remember { mutableIntStateOf(0) }
 
     Box(
-        modifier = modifier.onGloballyPositioned { anchorWidth = it.size.width }
+        modifier = modifier
+            .onGloballyPositioned { anchorWidth = it.size.width }
+            .clip(shape = MaterialTheme.shapes.medium)
     ) {
         Column(
             modifier = Modifier
@@ -73,12 +75,12 @@ fun BlurredDropDown(
                 Column(
                     modifier = Modifier
                         .width(with(LocalDensity.current) { anchorWidth.toDp() })
+                        .clip(shape = MaterialTheme.shapes.medium)
                         .blurredBackground(
                             blurHolder = blurHolder,
                             blurRadius = 96.dp,
                             tileMode = TileMode.Clamp
                         )
-                        .clip(shape = MaterialTheme.shapes.medium)
                 ) {
                     items.forEach { item ->
                         DropDownMenuItem(

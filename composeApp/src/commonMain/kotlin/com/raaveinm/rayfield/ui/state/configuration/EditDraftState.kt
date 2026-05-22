@@ -94,6 +94,11 @@ sealed interface EditIntent {
     data class UpdateOutboundProtocol(val protocol: Configurations.protocol) : EditIntent
     data class UpdateOutboundShadowsocksMethod(val method: Configurations.shadowsocksMethod) : EditIntent
 
+    // --- Pro Updates ---
+    data class UpdateLogLevel(val level: Configurations.loglevel) : EditIntent
+    data class UpdateDnsLogEnabled(val enabled: Boolean) : EditIntent
+    data class UpdateRoutingDomainStrategy(val strategy: Configurations.routingDomainStrategy) : EditIntent
+
     // --- Bulk Updates ---
     data class UpdateInbound(val inbound: InboundDraftState) : EditIntent
     data class UpdateStream(val stream: StreamDraftState) : EditIntent

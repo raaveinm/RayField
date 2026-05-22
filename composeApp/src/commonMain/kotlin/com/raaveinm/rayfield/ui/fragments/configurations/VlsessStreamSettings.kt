@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.collectAsState
@@ -77,6 +78,11 @@ fun VlessStreamSettings(
             )
         }
 
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = 8.dp),
+            color = onSurface.copy(alpha = 0.2f)
+        )
+
         ///////////////////////////////////////////////
         // Security
         ///////////////////////////////////////////////
@@ -112,7 +118,7 @@ fun VlessStreamSettings(
                 ) {
                     SettingOutlinedText(
                         state = editScreenModel.realityDestState,
-                        label = { Text("Reality Destination (e.g. 127.0.0.1:443)") },
+                        label = { Text("Reality Destination") },
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -166,6 +172,11 @@ fun VlessStreamSettings(
                         state = editScreenModel.realityShortIdsState,
                         label = { Text("Short IDs (comma separated)") },
                         modifier = Modifier.fillMaxWidth()
+                    )
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        color = onSurface.copy(alpha = 0.2f)
                     )
 
                     Row(

@@ -175,7 +175,7 @@ object XrayConfigBuilder {
     ///////////////////////////////////////////////
 
     fun outboundsSettingsBuilder(
-        sendThrough: String? = "",
+        sendThrough: String? = null,
         tag: String? = null,
         protocol: Configurations.protocol = Configurations.protocol.FREEDOM,
         settings: JsonObject? = null,

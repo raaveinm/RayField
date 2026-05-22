@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,7 +23,6 @@ import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.koin.koinScreenModel
 import com.raaveinm.rayfield.data.xray.Configurations
 import com.raaveinm.rayfield.data.xray.XrayConfig
 import com.raaveinm.rayfield.ui.adapters.AdaptivePadding
@@ -32,13 +32,13 @@ import com.raaveinm.rayfield.ui.fragments.configurations.ShadowsocksConfiguratio
 import com.raaveinm.rayfield.ui.fragments.configurations.VlessSettings
 import com.raaveinm.rayfield.ui.fragments.configurations.VlessStreamSettings
 import com.raaveinm.rayfield.ui.fragments.edit.SettingOutlinedText
+import com.raaveinm.rayfield.ui.screen.LocalSharedEditModel
 import com.raaveinm.rayfield.ui.state.GlobalBlurHolder
 import com.raaveinm.rayfield.ui.state.configuration.EditIntent
-import com.raaveinm.rayfield.ui.state.configuration.EditScreenModel
+import com.raaveinm.rayfield.ui.theme.LocalDimensions
 import io.github.neilyich.glassmorphism.blurredBackground
 import io.github.neilyich.glassmorphism.rememberBlurHolder
 import kotlinx.coroutines.launch
-import org.koin.core.parameter.parametersOf
 
 //
 // Created by Kirill "Raaveinm" on 5/4/26.
@@ -48,7 +48,7 @@ import org.koin.core.parameter.parametersOf
 fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
     val globalBlurHolder = GlobalBlurHolder.current ?: rememberBlurHolder()
     val lazyState = rememberLazyListState()
-    val editScreenModel = koinScreenModel<EditScreenModel> { parametersOf(configId, serverId) }
+    val editScreenModel = LocalSharedEditModel.current
     val state by editScreenModel.state.collectAsState()
     val scope = rememberCoroutineScope()
 
@@ -59,7 +59,7 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
             .fillMaxSize()
             .blurredBackground(
                 blurHolder = globalBlurHolder,
-                blurRadius = 96.dp,
+                blurRadius = 24.dp,
                 tileMode = TileMode.Clamp
             ),
         contentAlignment = Alignment.Center
@@ -68,13 +68,13 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
             modifier = Modifier.fillMaxSize(),
             state = lazyState,
             contentPadding = AdaptivePadding.adaptiveAll,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(LocalDimensions.current.mediumPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(LocalDimensions.current.mediumPadding),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(text = "Listen Address", color = onSurface)
@@ -92,7 +92,7 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(LocalDimensions.current.mediumPadding),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(text = "Port", color = onSurface)
@@ -109,7 +109,7 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(LocalDimensions.current.mediumPadding),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(text = "Inbound Protocol", color = onSurface, modifier = Modifier)
@@ -128,6 +128,12 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
                         }
                     )
                 }
+            }
+            item {
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    color = onSurface.copy(alpha = 0.2f)
+                )
             }
             item {
                 when (state.inbound.inboundProtocol) {
@@ -166,7 +172,7 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(LocalDimensions.current.mediumPadding),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(text = "Fallback Destination", color = onSurface)
@@ -179,8 +185,14 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
                 }
             }
             item {
+                androidx.compose.material3.HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    color = onSurface.copy(alpha = 0.2f)
+                )
+            }
+            item {
                 Button(
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = LocalDimensions.current.mediumPadding),
                     onClick = { editScreenModel.processIntent(EditIntent.Save)}
                 ) {
                     Text("Save Server Configuration")

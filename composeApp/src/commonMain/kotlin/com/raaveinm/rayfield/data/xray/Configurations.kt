@@ -61,12 +61,12 @@ object Configurations {
     }
 
     @Serializable
-    enum class targetOptions{
-        @SerialName("api.github.com") GITHUB,
-        @SerialName("dl.google.com") GOOGLE,
-        @SerialName("api.cloudflare.com") CLOUDFLARE,
-        @SerialName("tagmanager.google.com") GOOGLE_TAG_MANAGER,
-        @SerialName("update.microsoft.com") MICROSOFT
+    enum class targetOptions(val domain: String){
+        @SerialName("api.github.com") GITHUB("api.github.com"),
+        @SerialName("dl.google.com") GOOGLE("dl.google.com"),
+        @SerialName("api.cloudflare.com") CLOUDFLARE("api.cloudflare.com"),
+        @SerialName("tagmanager.google.com") GOOGLE_TAG_MANAGER("tagmanager.google.com"),
+        @SerialName("update.microsoft.com") MICROSOFT("update.microsoft.com")
     }
 
     ///////////////////////////////////////////////

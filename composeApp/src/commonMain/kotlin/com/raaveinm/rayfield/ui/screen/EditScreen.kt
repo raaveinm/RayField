@@ -27,7 +27,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,14 +58,20 @@ import com.raaveinm.rayfield.ui.navigation.ProTab
 import com.raaveinm.rayfield.ui.navigation.SshTab
 import com.raaveinm.rayfield.ui.state.GlobalBlurHolder
 import com.raaveinm.rayfield.ui.state.MainScreenModel
+import com.raaveinm.rayfield.ui.state.configuration.EditScreenModel
 import com.raaveinm.rayfield.ui.theme.LocalDimensions
 import io.github.neilyich.glassmorphism.blurredBackground
 import io.github.neilyich.glassmorphism.blurredContent
 import io.github.neilyich.glassmorphism.rememberBlurHolder
+import org.koin.core.parameter.parametersOf
 
 //
 // Created by Kirill "Raaveinm" on 5/3/26.
 //
+
+val LocalSharedEditModel = compositionLocalOf<EditScreenModel> {
+    error("No EditScreenModel provided!")
+}
 
 data class EditScreen (
     val configId: String? = null,
@@ -75,6 +83,7 @@ data class EditScreen (
     @Preview
     @Composable
     override fun Content() {
+        val sharedModel = koinScreenModel<EditScreenModel> { parametersOf(configId, serverId) }
         val screenModel = koinScreenModel<MainScreenModel>()
         val serverList by screenModel.serverUnits.collectAsState()
 
@@ -178,64 +187,66 @@ data class EditScreen (
             val scrollState = rememberScrollState()
             val tabs = listOf(SshTab(serverId), InboundTab(configId, serverId), OutboundTab, ProTab)
 
-            TabNavigator(tabs.first()) { tabNavigator ->
-                Box(
-                    modifier = Modifier
-                        .padding(adaptiveAll)
-                        .clip(RoundedCornerShape(24.dp))
-                        .shadow(8.dp)
-                        .blurredBackground(
-                            blurHolder = globalBlurHolder,
-                            blurRadius = 48.dp,
-                            tileMode = TileMode.Mirror
-                        )
-                        .background(surfaceVariant),
-                ) {
+            CompositionLocalProvider(LocalSharedEditModel provides sharedModel) {
+                TabNavigator(tabs.first()) { tabNavigator ->
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .blurredContent(localBlurHolder),
-                        contentAlignment = Alignment.Center
-                    ) { AnimatedTabTransition(tabNavigator) }
-                    Row(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = dimen.mediumPadding)
-                            .clip(CircleShape)
-                            .zIndex(1f)
+                            .padding(adaptiveAll)
+                            .clip(RoundedCornerShape(24.dp))
+                            .shadow(8.dp)
                             .blurredBackground(
-                                blurHolder = localBlurHolder,
-                                blurRadius = 8.dp,
+                                blurHolder = globalBlurHolder,
+                                blurRadius = 48.dp,
                                 tileMode = TileMode.Mirror
                             )
-                            .background(onInvertSurface)
-                            .horizontalScroll(scrollState),
-                        verticalAlignment = Alignment.CenterVertically
+                            .background(surfaceVariant),
                     ) {
-                        tabs.forEach { tab ->
-                            val isSelected = tabNavigator.current == tab
-                            Box(
-                                modifier = Modifier
-                                    .height(48.dp)
-                                    .clickable { tabNavigator.current = tab }
-                                    .padding(horizontal = dimen.mediumPadding),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = tab.options.title,
-                                    color = if (isSelected) primary else onSurface
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .blurredContent(localBlurHolder),
+                            contentAlignment = Alignment.Center
+                        ) { AnimatedTabTransition(tabNavigator) }
+                        Row(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(bottom = dimen.mediumPadding)
+                                .clip(CircleShape)
+                                .zIndex(1f)
+                                .blurredBackground(
+                                    blurHolder = localBlurHolder,
+                                    blurRadius = 8.dp,
+                                    tileMode = TileMode.Mirror
                                 )
-
-                                if (isSelected) {
-                                    Box(
-                                        modifier = Modifier
-                                            .align(Alignment.BottomCenter)
-                                            .padding(bottom = 2.dp)
-                                            .height(3.dp)
-                                            .width(28.dp)
-                                            .clip(CircleShape)
-                                            .background(primary)
+                                .background(onInvertSurface)
+                                .horizontalScroll(scrollState),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            tabs.forEach { tab ->
+                                val isSelected = tabNavigator.current == tab
+                                Box(
+                                    modifier = Modifier
+                                        .height(48.dp)
+                                        .clickable { tabNavigator.current = tab }
+                                        .padding(horizontal = dimen.mediumPadding),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = tab.options.title,
+                                        color = if (isSelected) primary else onSurface
                                     )
+
+                                    if (isSelected) {
+                                        Box(
+                                            modifier = Modifier
+                                                .align(Alignment.BottomCenter)
+                                                .padding(bottom = 2.dp)
+                                                .height(3.dp)
+                                                .width(28.dp)
+                                                .clip(CircleShape)
+                                                .background(primary)
+                                        )
+                                    }
                                 }
                             }
                         }
