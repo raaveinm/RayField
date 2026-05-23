@@ -168,6 +168,37 @@ fun Screen.ProScreen() {
                     Text("Save Full Configuration")
                 }
             }
+
+            ///////////////////////////////////////////////
+            // Install Configuration
+            ///////////////////////////////////////////////
+            item {
+                Text(
+                    text = "Server Installation",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = onSurface,
+                    modifier = Modifier.fillMaxWidth().padding(top = LocalDimensions.current.mediumPadding)
+                )
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = LocalDimensions.current.smallPadding),
+                    color = onSurface.copy(alpha = 0.2f)
+                )
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { editScreenModel.installServer() }
+                ) {
+                    Text("Install config on server")
+                }
+            }
+            item {
+                Spacer(modifier = Modifier.height(LocalDimensions.current.mediumPadding))
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { editScreenModel.restartConfiguration() }
+                ) {
+                    Text("Restart config on server")
+                }
+            }
         }
     }
 }

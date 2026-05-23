@@ -1,6 +1,7 @@
 package com.raaveinm.rayfield.ui.fragments.configurations
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,11 +26,13 @@ import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.raaveinm.rayfield.data.xray.Configurations
 import com.raaveinm.rayfield.data.xray.XrayConfig
 import com.raaveinm.rayfield.ui.fragments.BlurredDropDown
+import com.raaveinm.rayfield.ui.fragments.ErrorCard
 import com.raaveinm.rayfield.ui.fragments.edit.SettingOutlinedText
 import com.raaveinm.rayfield.ui.state.configuration.EditIntent
 import com.raaveinm.rayfield.ui.state.configuration.EditScreenModel
@@ -174,32 +177,44 @@ fun VlessSettings(
             }
         }
 
-        Button(
-            modifier = Modifier.wrapContentWidth().padding(top = LocalDimensions.current.mediumPadding),
-            onClick = {
-                editScreenModel.generateUuid()
-                val currentSettings = state.inbound.settings as? XrayConfig.VlessInboundSettings
-                    ?: XrayConfig.VlessInboundSettings()
-                val newUser = XrayConfig.VlessUser(
-                    id = editScreenModel.uuid.value,
-                    email = "user${currentSettings.users.size + 1}@rayfield.com"
-                )
-                editScreenModel.processIntent(
-                    EditIntent.UpdateInbound(
-                        state.inbound.copy(
-                            settings = currentSettings.copy(users = currentSettings.users + newUser)
+        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Button(
+                modifier = Modifier.wrapContentWidth()
+                    .padding(top = LocalDimensions.current.mediumPadding),
+                onClick = {
+                    editScreenModel.generateUuid()
+                    val currentSettings = state.inbound.settings as? XrayConfig.VlessInboundSettings
+                        ?: XrayConfig.VlessInboundSettings()
+                    val newUser = XrayConfig.VlessUser(
+                        id = editScreenModel.uuid.value,
+                        email = "user${currentSettings.users.size + 1}@rayfield.com"
+                    )
+                    editScreenModel.processIntent(
+                        EditIntent.UpdateInbound(
+                            state.inbound.copy(
+                                settings = currentSettings.copy(users = currentSettings.users + newUser)
+                            )
                         )
                     )
-                )
-            }
-        ) {
-            Text("add user")
+                }
+            ) { Text("add user") }
         }
 
         HorizontalDivider(
             modifier = Modifier.padding(vertical = LocalDimensions.current.smallPadding),
             color = onSurface.copy(alpha = 0.2f)
         )
+
+        val selectedDecryption = state.inbound.vlessDecryption
+
+        if (selectedDecryption != Configurations.vlessDecryption.NONE) {
+            val uriHandler = LocalUriHandler.current
+            ErrorCard(
+                "ERR: VLESS with ${selectedDecryption.name.lowercase()} is non-standard. " +
+                        "Proceed with caution (configuration may be invalid).",
+                onClick = { uriHandler.openUri("https://xtls.github.io/en/config/inbounds/vless.html") }
+            )
+        }
 
         Row (
             modifier = Modifier.fillMaxWidth(),
@@ -211,22 +226,14 @@ fun VlessSettings(
                 color = onSurface,
                 style = MaterialTheme.typography.titleMedium
             )
+
             BlurredDropDown(
                 blurHolder = globalBlurHolder,
                 items = Configurations.vlessDecryption.entries.map { it.name },
-                selectedItem = state.inbound.settings.let {
-                    (it as? XrayConfig.VlessInboundSettings)?.decryption?.name
-                } ?: Configurations.vlessDecryption.NONE.name,
+                selectedItem = selectedDecryption.name,
                 onItemSelected = { selectedName ->
                     val decryption = Configurations.vlessDecryption.valueOf(selectedName)
-                    val currentSettings =
-                        state.inbound.settings as? XrayConfig.VlessInboundSettings
-                            ?: return@BlurredDropDown
-                    editScreenModel.processIntent(
-                        EditIntent.UpdateInbound(
-                            state.inbound.copy(settings = currentSettings.copy(decryption = decryption))
-                        )
-                    )
+                    editScreenModel.processIntent(EditIntent.UpdateVlessDecryption(decryption))
                 }
             )
         }

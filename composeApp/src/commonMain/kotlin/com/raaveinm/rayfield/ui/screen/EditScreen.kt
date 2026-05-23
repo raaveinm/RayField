@@ -3,27 +3,15 @@ package com.raaveinm.rayfield.ui.screen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,7 +38,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.TabNavigator
 import com.raaveinm.rayfield.ui.adapters.AdaptivePadding.adaptiveAll
 import com.raaveinm.rayfield.ui.animations.AnimatedTabTransition
-import com.raaveinm.rayfield.ui.fragments.ConnectionInfoCard
 import com.raaveinm.rayfield.ui.fragments.DisplayGrid
 import com.raaveinm.rayfield.ui.navigation.InboundTab
 import com.raaveinm.rayfield.ui.navigation.OutboundTab
@@ -97,14 +84,12 @@ data class EditScreen (
         val onInvertSurface = MaterialTheme.colorScheme.surface.copy(alpha = .84f)
         val primary = MaterialTheme.colorScheme.primary
         val onSurface = MaterialTheme.colorScheme.onSurface
-        val primaryContainer = MaterialTheme.colorScheme.primaryContainer
 
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             if (serverId == null && configId == null) {
-                var showPreciser by remember { mutableStateOf(false) }
                 var selectedServerId by remember { mutableStateOf<String?>(null) }
                 val connectionList by remember(selectedServerId) {
                     screenModel.getServerStatesForServer(serverId = selectedServerId ?: "")
@@ -118,74 +103,12 @@ data class EditScreen (
                         if (connectionList.isEmpty()){
                             navigator.push(EditScreen(serverId = selectedServerId))
                         }
-                        showPreciser = !showPreciser
                 })
-                if (showPreciser) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .blurredBackground(
-                                blurHolder = localBlurHolder,
-                                blurRadius = 8.dp,
-                                tileMode = TileMode.Decal)
-                            .background(surfaceVariant.copy(alpha = .5f))
-                            .clickable{ showPreciser = false }
-                            .padding(adaptiveAll),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        LazyVerticalGrid(
-                            columns = GridCells.Adaptive(minSize = 360.dp),
-                            state = rememberLazyGridState(),
-                            horizontalArrangement = Arrangement.spacedBy(dimen.mediumPadding),
-                            verticalArrangement = Arrangement.spacedBy(dimen.mediumPadding)
-                        ) {
-                            items(connectionList) { serverState ->
-                                ConnectionInfoCard(
-                                    serverState = serverState,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    followingIcon = {
-                                        IconButton(onClick = {
-                                            navigator.push(
-                                                EditScreen(
-                                                    serverId = serverState.serverId,
-                                                    configId = serverState.configId
-                                                )
-                                            )
-                                        }) {
-                                            Icon(
-                                                imageVector = Icons.Outlined.Edit,
-                                                contentDescription = "edit_server_button"
-                                            )
-                                        }
-                                    }
-                                )
-                            }
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .size(48.dp)
-                                        .clip(MaterialTheme.shapes.medium)
-                                        .background(primaryContainer)
-                                        .clickable{
-                                            navigator.push(EditScreen(serverId = selectedServerId)) },
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Add,
-                                        tint = onSurface,
-                                        modifier = Modifier.size(32.dp),
-                                        contentDescription = "edit_server_button"
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
                 return@Box
             }
 
             val scrollState = rememberScrollState()
-            val tabs = listOf(SshTab(serverId), InboundTab(configId, serverId), OutboundTab, ProTab)
+            val tabs = listOf(SshTab(serverId), InboundTab, OutboundTab, ProTab)
 
             CompositionLocalProvider(LocalSharedEditModel provides sharedModel) {
                 TabNavigator(tabs.first()) { tabNavigator ->

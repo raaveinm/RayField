@@ -29,21 +29,18 @@ data class SshTab(
     }
 }
 
-data class InboundTab(
-    val configId: String? = null,
-    val serverId: String? = null,
-) : Tab {
+object InboundTab : Tab {
     override val options: TabOptions
         @Composable get() = TabOptions(index = 1u, title = "Inbound")
     @Composable
     override fun Content() {
-        InboundScreen(configId, serverId)
+        InboundScreen()
     }
 }
 
 object OutboundTab : Tab {
     override val options: TabOptions
-        @Composable get() = TabOptions(index = 3u, title = "Outbound")
+        @Composable get() = TabOptions(index = 2u, title = "Outbound")
 
     @Composable
     override fun Content() {
@@ -53,7 +50,7 @@ object OutboundTab : Tab {
 
 object ProTab : Tab {
     override val options: TabOptions
-        @Composable get() = TabOptions(index = 4u, title = "Pro")
+        @Composable get() = TabOptions(index = 3u, title = "Pro")
     @Composable
     override fun Content() {
         ProScreen()

@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.raaveinm.rayfield.data.xray.Configurations
 import com.raaveinm.rayfield.ui.fragments.BlurredDropDown
+import com.raaveinm.rayfield.ui.fragments.ErrorCard
 import com.raaveinm.rayfield.ui.fragments.edit.SettingOutlinedText
 import com.raaveinm.rayfield.ui.state.configuration.EditIntent
 import com.raaveinm.rayfield.ui.state.configuration.EditScreenModel
@@ -103,6 +104,18 @@ fun VlessStreamSettings(
             )
         }
 
+        val unsafeFingerprint = listOf(
+            Configurations.fingerprint.UNSAFE,
+            Configurations.fingerprint.RANDOMIZED,
+            Configurations.fingerprint.RANDOM,
+            Configurations.fingerprint.QQ,
+            Configurations.fingerprint.B360
+        )
+
+        if (unsafeFingerprint.contains(stream.fingerprint)) {
+            ErrorCard("Some domains may be unavailable with ${stream.fingerprint.name} fingerprint.")
+        }
+
         when (stream.security) {
             Configurations.security.TLS -> {
                 SettingOutlinedText(
@@ -110,12 +123,43 @@ fun VlessStreamSettings(
                     label = { Text("TLS Server Name (SNI)") },
                     modifier = Modifier.fillMaxWidth()
                 )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "Fingerprint", color = onSurface)
+                    BlurredDropDown(
+                        blurHolder = globalBlurHolder,
+                        items = Configurations.fingerprint.entries.map { it.name },
+                        selectedItem = stream.fingerprint.name,
+                        onItemSelected = {
+                            editScreenModel.processIntent(EditIntent.UpdateTlsFingerprint(Configurations.fingerprint.valueOf(it)))
+                        }
+                    )
+                }
             }
             Configurations.security.REALITY -> {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = "Fingerprint", color = onSurface)
+                        BlurredDropDown(
+                            blurHolder = globalBlurHolder,
+                            items = Configurations.fingerprint.entries.map { it.name },
+                            selectedItem = stream.fingerprint.name,
+                            onItemSelected = {
+                                editScreenModel.processIntent(EditIntent.UpdateRealityFingerprint(Configurations.fingerprint.valueOf(it)))
+                            }
+                        )
+                    }
+
                     SettingOutlinedText(
                         state = editScreenModel.realityDestState,
                         label = { Text("Reality Destination") },

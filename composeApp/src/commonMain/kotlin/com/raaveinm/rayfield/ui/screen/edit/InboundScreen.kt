@@ -12,6 +12,7 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -22,12 +23,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.core.screen.Screen
 import com.raaveinm.rayfield.data.xray.Configurations
 import com.raaveinm.rayfield.data.xray.XrayConfig
 import com.raaveinm.rayfield.ui.adapters.AdaptivePadding
 import com.raaveinm.rayfield.ui.adapters.IpAutoFormatTransformation
 import com.raaveinm.rayfield.ui.fragments.BlurredDropDown
+import com.raaveinm.rayfield.ui.fragments.ErrorCard
 import com.raaveinm.rayfield.ui.fragments.configurations.ShadowsocksConfiguration
 import com.raaveinm.rayfield.ui.fragments.configurations.VlessSettings
 import com.raaveinm.rayfield.ui.fragments.configurations.VlessStreamSettings
@@ -45,7 +46,7 @@ import kotlinx.coroutines.launch
 //
 
 @Composable
-fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
+fun InboundScreen() {
     val globalBlurHolder = GlobalBlurHolder.current ?: rememberBlurHolder()
     val lazyState = rememberLazyListState()
     val editScreenModel = LocalSharedEditModel.current
@@ -136,6 +137,14 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
                 )
             }
             item {
+                if (state.inbound.inboundProtocol == Configurations.inboundProtocol.SHADOWSOCKS && 
+                    state.stream.security != Configurations.security.NONE) {
+                    ErrorCard("Warning: Shadowsocks with ${state.stream.security.name} is " +
+                            "non-standard.Standard ss:// links will not work.")
+                }
+            }
+
+            item {
                 when (state.inbound.inboundProtocol) {
                     Configurations.inboundProtocol.SHADOWSOCKS -> {
                         ShadowsocksConfiguration(
@@ -151,6 +160,11 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
                                 editScreenModel.shadowsocksPasswordState.setTextAndPlaceCursorAtEnd(editScreenModel.uuid.value)
                             }
                         )
+                        VlessStreamSettings(
+                            editScreenModel = editScreenModel,
+                            globalBlurHolder = globalBlurHolder,
+                            onSurface = onSurface
+                        )
                     }
                     Configurations.inboundProtocol.VLESS -> {
                         val vlessSettings = state.inbound.settings as? XrayConfig.VlessInboundSettings
@@ -160,6 +174,58 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
                             onSurface = onSurface,
                             globalBlurHolder = globalBlurHolder,
                         )
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = LocalDimensions.current.smallPadding),
+                            color = onSurface.copy(alpha = 0.2f)
+                        )
+                        // Shadowsocks Fallback Toggle
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Fallback to Shadowsocks", color = onSurface)
+                            Switch(
+                                checked = state.inbound.isShadowsocksFallback,
+                                onCheckedChange = {
+                                    editScreenModel.processIntent(EditIntent.UpdateShadowsocksFallback(it))
+                                }
+                            )
+                        }
+
+                        if (state.inbound.isShadowsocksFallback) {
+                            ErrorCard(
+                                "Info: Shadowsocks fallback enabled. VLESS traffic will be handled normally, " +
+                                        "while non-compliant traffic will be routed to the internal Shadowsocks inbound."
+                            )
+
+                            Text(
+                                "Shadowsocks Fallback Settings",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = onSurface,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                            ShadowsocksConfiguration(
+                                globalBlurHolder = globalBlurHolder,
+                                editScreenModel = editScreenModel,
+                                state = state,
+                                scope = scope,
+                                shadowsocksPasswordState = editScreenModel.shadowsocksPasswordState,
+                                shadowsocksEmailState = editScreenModel.shadowsocksEmailState,
+                                onSurface = onSurface,
+                                onGenerateClick = {
+                                    editScreenModel.generateUuid()
+                                    editScreenModel.shadowsocksPasswordState.setTextAndPlaceCursorAtEnd(editScreenModel.uuid.value)
+                                }
+                            )
+                        }
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = LocalDimensions.current.smallPadding),
+                            color = onSurface.copy(alpha = 0.2f)
+                        )
+
                         VlessStreamSettings(
                             editScreenModel = editScreenModel,
                             globalBlurHolder = globalBlurHolder,
@@ -185,7 +251,7 @@ fun Screen.InboundScreen(configId: String? = null, serverId: String? = null) {
                 }
             }
             item {
-                androidx.compose.material3.HorizontalDivider(
+                HorizontalDivider(
                     modifier = Modifier.padding(vertical = 8.dp),
                     color = onSurface.copy(alpha = 0.2f)
                 )

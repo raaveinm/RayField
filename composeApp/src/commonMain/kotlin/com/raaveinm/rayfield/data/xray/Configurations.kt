@@ -25,6 +25,8 @@ object Configurations {
     enum class protocol {
         @SerialName("vless") VLESS,
         @SerialName("shadowsocks") SHADOWSOCKS,
+        @SerialName("socks") SOCKS,
+        @SerialName("http") HTTP,
         //        @SerialName("hysteria") HYSTERIA,
         @SerialName("freedom") FREEDOM,
         @SerialName("blackhole") BLACKHOLE
@@ -65,7 +67,7 @@ object Configurations {
         @SerialName("api.github.com") GITHUB("api.github.com"),
         @SerialName("dl.google.com") GOOGLE("dl.google.com"),
         @SerialName("api.cloudflare.com") CLOUDFLARE("api.cloudflare.com"),
-        @SerialName("tagmanager.google.com") GOOGLE_TAG_MANAGER("tagmanager.google.com"),
+        @SerialName("www.yahoo.com") YAHOO("www.yahoo.com"),
         @SerialName("update.microsoft.com") MICROSOFT("update.microsoft.com")
     }
 
@@ -89,6 +91,11 @@ object Configurations {
         @SerialName("vless") VLESS,
         @SerialName("shadowsocks") SHADOWSOCKS,
         //        @SerialName("hysteria") HYSTERIA,
+    }
+
+    fun inboundProtocol.toProtocol(): protocol = when (this) {
+        inboundProtocol.VLESS -> protocol.VLESS
+        inboundProtocol.SHADOWSOCKS -> protocol.SHADOWSOCKS
     }
 
     @Serializable
@@ -174,7 +181,7 @@ object Configurations {
 
     @Serializable
     enum class vlessFlow{
-        @SerialName("") NONE,
+        @SerialName("none") NONE,
         @SerialName("xtls-rprx-vision") XTLS_RPRX_VISION,
         @SerialName("xtls-rprx-vision-udp") XTLS_RPRX_VISION_UDP,
     }

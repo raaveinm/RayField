@@ -33,9 +33,15 @@ class ShareLinkGenerator {
             reality.fingerprint?.let { queryParams.add("fp=${it.name.lowercase()}") }
         }
 
+        // 1. Force the required encryption parameter for VLESS
+        queryParams.add("encryption=none")
+
         val queryString = if (queryParams.isNotEmpty()) "?" + queryParams.joinToString("&") else ""
-        val tag = encodeUri(user.email)
-        return "vless://${user.id}@$serverIp:$port$queryString#$tag"
+        
+        // 2. Safely encode the email to prevent URI parsing errors and ensure ONLY ONE hashtag is used
+        val safeAlias = user.email.replace("@", "%40")
+
+        return "vless://${user.id}@$serverIp:$port$queryString#$safeAlias"
     }
 
     fun generateShadowsocksLink(
@@ -97,10 +103,14 @@ class ShareLinkGenerator {
             }
         }
 
-        val queryString = if (queryParams.isNotEmpty()) "?" + queryParams.joinToString("&") else ""
-        val tag = encodeUri(outbound.tag ?: "Rayfield_VLESS")
+        queryParams.add("encryption=none")
 
-        return "vless://$uuid@$address:$port$queryString#$tag"
+        val queryString = if (queryParams.isNotEmpty()) "?" + queryParams.joinToString("&") else ""
+
+        val tag = outbound.tag ?: "Rayfield_VLESS"
+        val safeAlias = tag.replace("@", "%40")
+
+        return "vless://$uuid@$address:$port$queryString#$safeAlias"
     }
 
 
@@ -120,6 +130,130 @@ class ShareLinkGenerator {
         val tag = encodeUri(outbound.tag ?: "Rayfield_Shadowsocks")
 
         return "ss://$encodedUserInfo@$address:$port#$tag"
+    }
+
+    fun generateClientJson(
+        serverIp: String,
+        port: Int,
+        protocol: Configurations.protocol,
+        vlessUser: XrayConfig.VlessUser? = null,
+        ssUser: XrayConfig.ShadowsocksUser? = null,
+        stream: XrayConfig.StreamSettings,
+        tag: String? = "proxy"
+    ): String {
+        val outbounds = mutableListOf<XrayConfig.OutboundConfig>()
+
+        // 1. Primary Proxy Outbound
+        val settings = when (protocol) {
+            Configurations.protocol.VLESS -> {
+                XrayConfigBuilder.toSettings(
+                    XrayConfig.VlessOutboundSettings(
+                        vnext = listOf(
+                            XrayConfig.VnextServer(
+                                address = serverIp,
+                                port = port,
+                                users = listOf(
+                                    XrayConfig.VnextUser(
+                                        id = vlessUser?.id ?: "",
+                                        flow = vlessUser?.flow
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            }
+            Configurations.protocol.SHADOWSOCKS -> {
+                XrayConfigBuilder.toSettings(
+                    XrayConfig.ShadowsocksOutboundSettings(
+                        servers = listOf(
+                            XrayConfig.ShadowsocksOutboundServer(
+                                address = serverIp,
+                                port = port,
+                                method = ssUser?.method ?: Configurations.shadowsocksMethod.AES_256_GCM,
+                                password = ssUser?.password ?: ""
+                            )
+                        )
+                    )
+                )
+            }
+            else -> null
+        }
+
+        outbounds.add(
+            XrayConfig.OutboundConfig(
+                protocol = protocol,
+                settings = settings,
+                streamSettings = stream,
+                tag = tag ?: "proxy"
+            )
+        )
+
+        // 2. Direct Outbound
+        outbounds.add(
+            XrayConfig.OutboundConfig(
+                protocol = Configurations.protocol.FREEDOM,
+                tag = "direct"
+            )
+        )
+
+        // 3. Block Outbound
+        outbounds.add(
+            XrayConfig.OutboundConfig(
+                protocol = Configurations.protocol.BLACKHOLE,
+                tag = "block"
+            )
+        )
+
+        // We build the JSON manually to bypass InboundConfig's inboundProtocol restriction
+        return buildJsonObject {
+            put("log", buildJsonObject { put("loglevel", "warning") })
+            put("inbounds", buildJsonArray {
+                add(buildJsonObject {
+                    put("listen", "127.0.0.1")
+                    put("port", 1080)
+                    put("protocol", "socks")
+                    put("settings", XrayConfigBuilder.toSettings(XrayConfig.SocksInboundSettings()))
+                    put("sniffing", buildJsonObject {
+                        put("enabled", true)
+                        put("destOverride", buildJsonArray { add("http"); add("tls"); add("fakedns") })
+                    })
+                    put("tag", "socks-in")
+                })
+                add(buildJsonObject {
+                    put("listen", "127.0.0.1")
+                    put("port", 1081)
+                    put("protocol", "http")
+                    put("settings", XrayConfigBuilder.toSettings(XrayConfig.HttpInboundSettings()))
+                    put("sniffing", buildJsonObject {
+                        put("enabled", true)
+                        put("destOverride", buildJsonArray { add("http"); add("tls"); add("fakedns") })
+                    })
+                    put("tag", "http-in")
+                })
+            })
+            put("outbounds", XrayConfigBuilder.jsonFormatter.encodeToJsonElement(outbounds))
+            put("routing", buildJsonObject {
+                put("domainStrategy", "AsIs")
+                put("rules", buildJsonArray {
+                    add(buildJsonObject {
+                        put("ip", buildJsonArray { add("geoip:private") })
+                        put("outboundTag", "direct")
+                        put("type", "field")
+                    })
+                    add(buildJsonObject {
+                        put("ip", buildJsonArray { add("geoip:cn") })
+                        put("outboundTag", "direct")
+                        put("type", "field")
+                    })
+                    add(buildJsonObject {
+                        put("domain", buildJsonArray { add("geosite:cn") })
+                        put("outboundTag", "direct")
+                        put("type", "field")
+                    })
+                })
+            })
+        }.let { XrayConfigBuilder.jsonFormatter.encodeToString(it) }
     }
 
     private fun encodeUri(value: String): String {

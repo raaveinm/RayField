@@ -159,7 +159,7 @@ fun ConnectionInfoCard(
                             .weight(1f)
                             .padding(end = dimensions.smallPadding)
                             .clickable {
-                                onCopyClick(serverState.sharedLink + "#${displayName}")
+                                onCopyClick(serverState.sharedLink)
                             },
                         softWrap = true,
                         maxLines = 3

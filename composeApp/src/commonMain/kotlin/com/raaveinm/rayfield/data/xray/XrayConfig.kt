@@ -216,6 +216,20 @@ data class XrayConfig(
         val port: Int
     )
 
+    // SOCKS
+    @Serializable
+    data class SocksInboundSettings(
+        val auth: String = "noauth",
+        val udp: Boolean = true,
+        val ip: String = "127.0.0.1"
+    ) : InboundSettings
+
+    // HTTP
+    @Serializable
+    data class HttpInboundSettings(
+        val timeout: Int = 0
+    ) : InboundSettings
+
     // Outbound Protocols
 
     @Serializable

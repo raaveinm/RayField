@@ -19,8 +19,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 import com.raaveinm.rayfield.data.xray.types.ServerState
+import com.raaveinm.rayfield.domain.ssh.ServerConfiguration
 import com.raaveinm.rayfield.domain.xray.ShareLinkGenerator
 import kotlinx.coroutines.flow.first
+import kotlin.random.Random
 
 //
 // Created by Kirill "Raaveinm" on 5/11/26.
@@ -85,9 +87,6 @@ class EditScreenModel(
     val state = _state.asStateFlow()
 
     var uuid = MutableStateFlow("")
-    var privateKey = MutableStateFlow("")
-    var publicKey = MutableStateFlow("")
-    var shortId = MutableStateFlow("")
 
     init {
         if (initialServerId != null) {
@@ -128,7 +127,9 @@ class EditScreenModel(
 
             when (outbound.protocol) {
                 Configurations.protocol.VLESS -> {
-                    val vlessSettings = outbound.settings as? XrayConfig.VlessOutboundSettings
+                    val vlessSettings = outbound.settings?.let {
+                        XrayConfigBuilder.jsonFormatter.decodeFromJsonElement<XrayConfig.VlessOutboundSettings>(it)
+                    }
                     val firstVlessServer = vlessSettings?.vnext?.firstOrNull()
                     if (firstVlessServer != null) {
                         outboundAddressState.setTextAndPlaceCursorAtEnd(firstVlessServer.address)
@@ -137,7 +138,9 @@ class EditScreenModel(
                     }
                 }
                 Configurations.protocol.SHADOWSOCKS -> {
-                    val ssSettings = outbound.settings as? XrayConfig.ShadowsocksOutboundSettings
+                    val ssSettings = outbound.settings?.let {
+                        XrayConfigBuilder.jsonFormatter.decodeFromJsonElement<XrayConfig.ShadowsocksOutboundSettings>(it)
+                    }
                     val firstSsServer = ssSettings?.servers?.firstOrNull()
                     if (firstSsServer != null) {
                         outboundAddressState.setTextAndPlaceCursorAtEnd(firstSsServer.address)
@@ -175,8 +178,8 @@ class EditScreenModel(
                     
                     // Unpack Inbound Layer
                     val inbound = config.inbounds?.firstOrNull()
-                    var unpackedInboundSettings: XrayConfig.InboundSettings? = null
-                    var stream: XrayConfig.StreamSettings? = null
+                    var unpackedInboundSettings: XrayConfig.InboundSettings?
+                    var stream: XrayConfig.StreamSettings?
 
                     if (inbound != null) {
                         listenState.setTextAndPlaceCursorAtEnd(inbound.listen)
@@ -218,7 +221,7 @@ class EditScreenModel(
                                 inboundListen = inbound.listen,
                                 inboundPort = inbound.port,
                                 inboundProtocol = inbound.protocol,
-                                settings = unpackedInboundSettings ?: it.inbound.settings
+                                settings = unpackedInboundSettings
                             ),
                             stream = it.stream.copy(
                                 network = stream?.network ?: Configurations.transportNetwork.TCP,
@@ -236,13 +239,17 @@ class EditScreenModel(
                         outboundTagState.setTextAndPlaceCursorAtEnd(outbound.tag ?: "proxy")
                         
                         if (outbound.protocol == Configurations.protocol.VLESS) {
-                            val vlessOut = XrayConfigBuilder.jsonFormatter.decodeFromJsonElement<XrayConfig.VlessOutboundSettings>(outbound.settings ?: JsonObject(emptyMap()))
+                            val vlessOut = XrayConfigBuilder.jsonFormatter
+                                .decodeFromJsonElement<XrayConfig.VlessOutboundSettings>(
+                                    outbound.settings ?: JsonObject(emptyMap()))
                             val serverNode = vlessOut.vnext.firstOrNull()
                             outboundAddressState.setTextAndPlaceCursorAtEnd(serverNode?.address ?: "")
                             outboundPortState.setTextAndPlaceCursorAtEnd(serverNode?.port?.toString() ?: "443")
                             outboundIdState.setTextAndPlaceCursorAtEnd(serverNode?.users?.firstOrNull()?.id ?: "")
                         } else if (outbound.protocol == Configurations.protocol.SHADOWSOCKS) {
-                            val ssOut = XrayConfigBuilder.jsonFormatter.decodeFromJsonElement<XrayConfig.ShadowsocksOutboundSettings>(outbound.settings ?: JsonObject(emptyMap()))
+                            val ssOut = XrayConfigBuilder.jsonFormatter
+                                .decodeFromJsonElement<XrayConfig.ShadowsocksOutboundSettings>(
+                                    outbound.settings ?: JsonObject(emptyMap()))
                             val serverNode = ssOut.servers.firstOrNull()
                             outboundAddressState.setTextAndPlaceCursorAtEnd(serverNode?.address ?: "")
                             outboundPortState.setTextAndPlaceCursorAtEnd(serverNode?.port?.toString() ?: "443")
@@ -257,7 +264,7 @@ class EditScreenModel(
                         ) }
                     }
 
-                    // 6. Unpack Pro Layer (Logs & Routing)
+                    // Unpack Pro Layer (Logs & Routing)
                     val log = config.log
                     if (log != null) {
                         logAccessPathState.setTextAndPlaceCursorAtEnd(log.access ?: "")
@@ -298,6 +305,8 @@ class EditScreenModel(
             is EditIntent.UpdateVmessAlterId -> _state.update { it.copy(inbound = it.inbound.copy(vmessAlterId = intent.alterId)) }
             is EditIntent.UpdateTrojanPassword -> _state.update { it.copy(inbound = it.inbound.copy(trojanPassword = intent.password)) }
             is EditIntent.UpdateFallbackDest -> _state.update { it.copy(inbound = it.inbound.copy(fallbackDest = intent.port)) }
+            is EditIntent.UpdateShadowsocksFallback -> _state.update { it.copy(inbound = it.inbound.copy(isShadowsocksFallback = intent.enabled)) }
+            is EditIntent.UpdateVlessDecryption -> _state.update { it.copy(inbound = it.inbound.copy(vlessDecryption = intent.decryption)) }
             
             is EditIntent.UpdateOutboundProtocol -> _state.update { it.copy(outbound = it.outbound.copy(protocol = intent.protocol)) }
             is EditIntent.UpdateOutboundShadowsocksMethod -> _state.update { it.copy(outbound = it.outbound.copy(shadowsocksMethod = intent.method)) }
@@ -340,17 +349,28 @@ class EditScreenModel(
                     } else it.stream.tlsSettings
                 ))
             }
-            is EditIntent.UpdateRealityTarget -> _state.update {
-                it.copy(stream = it.stream.copy(
-                    realitySettings = (it.stream.realitySettings ?: XrayConfig.RealitySettings(
-                        serverNames = emptyList(),
-                        privateKey = "",
-                        password = ""
-                    )).copy(target = intent.target)
-                ))
+            is EditIntent.UpdateRealityTarget -> {
+                _state.update {
+                    it.copy(stream = it.stream.copy(
+                        realitySettings = (it.stream.realitySettings ?: XrayConfig.RealitySettings(
+                            serverNames = emptyList(),
+                            privateKey = "",
+                            password = ""
+                        )).copy(target = intent.target)
+                    ))
+                }
+                
+                // AUTO-POPULATING FIELDS (UX Magic)
+                val targetDomain = intent.target.domain
+                realityDestState.setTextAndPlaceCursorAtEnd("$targetDomain:443")
+                realityServerNamesState.setTextAndPlaceCursorAtEnd(targetDomain)
             }
-            is EditIntent.UpdateRealityFingerprint -> {}
-            is EditIntent.UpdateTlsFingerprint -> {}
+            is EditIntent.UpdateRealityFingerprint -> _state.update { 
+                it.copy(stream = it.stream.copy(fingerprint = intent.fingerprint))
+            }
+            is EditIntent.UpdateTlsFingerprint -> _state.update { 
+                it.copy(stream = it.stream.copy(fingerprint = intent.fingerprint))
+            }
             
             EditIntent.Save -> { screenModelScope.launch { saveServer() } }
             EditIntent.Cancel -> { /* Handle cancel */ }
@@ -360,46 +380,95 @@ class EditScreenModel(
     suspend fun saveServer() {
         val currentState = _state.value
 
+        var ssFallbackInbound: XrayConfig.InboundConfig? = null
+        val ssFallbackPort = Random.nextInt(10000, 60000)
+
         val inboundSettingsJson = when (currentState.inbound.inboundProtocol) {
             Configurations.inboundProtocol.VLESS -> {
                 var currentVlessSettings = currentState.inbound.settings as? XrayConfig.VlessInboundSettings
                     ?: XrayConfig.VlessInboundSettings()
-                
-                // Ensure at least one user exists
-                if (currentVlessSettings.users.isEmpty()) {
+
+                val processedUsers = if (currentVlessSettings.users.isEmpty()) {
+                    listOf(XrayConfig.VlessUser(id = cypherService.generateUuid(), email = "default@rayfield.com"))
+                } else {
+                    currentVlessSettings.users.map { user ->
+                        user.copy(flow = if (user.flow == Configurations.vlessFlow.NONE) null else user.flow)
+                    }
+                }
+
+                if (currentState.inbound.isShadowsocksFallback) {
                     currentVlessSettings = currentVlessSettings.copy(
-                        users = listOf(XrayConfig.VlessUser(id = cypherService.generateUuid(), email = "default@rayfield.com"))
+                        fallbacks = (currentVlessSettings.fallbacks ?: emptyList()) + 
+                            XrayConfig.VlessFallback(dest = "127.0.0.1", port = ssFallbackPort)
+                    )
+
+                    // Prepare the hidden Shadowsocks inbound
+                    val method = currentState.inbound.shadowsocksMethod ?: Configurations.shadowsocksMethod.AES_256_GCM
+                    val password = shadowsocksPasswordState.text.toString().takeIf { it.isNotBlank() } ?: cypherService.generateUuid()
+                    val email = shadowsocksEmailState.text.toString().takeIf { it.isNotBlank() } ?: "fallback@xray.com"
+
+                    ssFallbackInbound = XrayConfig.InboundConfig(
+                        listen = "127.0.0.1",
+                        port = ssFallbackPort,
+                        protocol = Configurations.inboundProtocol.SHADOWSOCKS,
+                        settings = XrayConfigBuilder.shadowsocksSettingBuilder(
+                            network = currentState.inbound.shadowsocksNetwork,
+                            method = method,
+                            password = password,
+                            email = email,
+                            users = listOf(
+                                XrayConfig.ShadowsocksUser(
+                                    password = password,
+                                    method = method,
+                                    email = email
+                                )
+                            )
+                        ),
+                        tag = "inbound-ss-fallback"
                     )
                 }
 
-                // FORCEFULLY set to NONE before saving
                 currentVlessSettings = currentVlessSettings.copy(
-                    decryption = Configurations.vlessDecryption.NONE
+                    users = processedUsers,
+                    decryption = currentState.inbound.vlessDecryption
                 )
 
                 XrayConfigBuilder.toSettings(currentVlessSettings)
             }
             Configurations.inboundProtocol.SHADOWSOCKS -> {
+                val method = currentState.inbound.shadowsocksMethod ?: Configurations.shadowsocksMethod.AES_256_GCM
+                val password = shadowsocksPasswordState.text.toString().takeIf { it.isNotBlank() } ?: cypherService.generateUuid()
+                val email = shadowsocksEmailState.text.toString().takeIf { it.isNotBlank() } ?: "love@xray.com"
+
                 XrayConfigBuilder.shadowsocksSettingBuilder(
                     network = currentState.inbound.shadowsocksNetwork,
-                    method = currentState.inbound.shadowsocksMethod ?: Configurations.shadowsocksMethod.AES_256_GCM,
-                    password = shadowsocksPasswordState.text.toString().takeIf { it.isNotBlank() } ?: cypherService.generateUuid(),
-                    email = shadowsocksEmailState.text.toString().takeIf { it.isNotBlank() } ?: "love@xray.com"
+                    method = method,
+                    password = password,
+                    email = email,
+                    users = listOf(
+                        XrayConfig.ShadowsocksUser(
+                            password = password,
+                            method = method,
+                            email = email
+                        )
+                    )
                 )
             }
         }
 
-        // Compile Stream Settings (Transport & Security Layers)
-        val streamSettings = XrayConfig.StreamSettings(
+        val finalStreamSettings = XrayConfig.StreamSettings(
             network = currentState.stream.network,
             security = currentState.stream.security,
             tlsSettings = if (currentState.stream.security == Configurations.security.TLS) {
-                XrayConfig.TlsSettings(serverName = tlsServerNameState.text.toString().takeIf { it.isNotBlank() } ?: "google.com")
+                XrayConfig.TlsSettings(
+                    serverName = tlsServerNameState.text.toString().takeIf { it.isNotBlank() } ?: "google.com",
+                    fingerprint = currentState.stream.fingerprint
+                )
             } else null,
             realitySettings = if (currentState.stream.security == Configurations.security.REALITY) {
                 val pKey = realityPrivateKeyState.text.toString().takeIf { it.isNotBlank() }
                 val pubKey = realityPublicKeyState.text.toString().takeIf { it.isNotBlank() }
-                
+
                 // Auto-generate keys if missing
                 val finalKeyPair = if (pKey == null || pubKey == null) {
                     cypherService.generateKeyPair()
@@ -421,7 +490,8 @@ class EditScreenModel(
                     serverNames = sNames.ifEmpty { listOf(activeTargetDomain) },
                     privateKey = pKey ?: finalKeyPair!!.privateKey,
                     password = pubKey ?: finalKeyPair!!.publicKey,
-                    shortIds = sIds.ifEmpty { listOf("") }
+                    shortIds = sIds.ifEmpty { listOf("") },
+                    fingerprint = currentState.stream.fingerprint
                 )
             } else null,
             xhttpSettings = if (currentState.stream.network == Configurations.transportNetwork.XHTTP) {
@@ -473,15 +543,16 @@ class EditScreenModel(
             routing = XrayConfig.RoutingConfig(
                 domainStrategy = currentState.pro.routing.domainStrategy
             ),
-            inbounds = listOf(
+            inbounds = listOfNotNull(
                 XrayConfig.InboundConfig(
                     listen = listenState.text.toString(),
                     port = portState.text.toString().toIntOrNull() ?: 443,
                     protocol = currentState.inbound.inboundProtocol,
                     settings = inboundSettingsJson,
-                    streamSettings = streamSettings,
+                    streamSettings = finalStreamSettings,
                     tag = "inbound-main"
-                )
+                ),
+                ssFallbackInbound
             ),
             outbounds = listOf(
                 XrayConfig.OutboundConfig(
@@ -498,9 +569,8 @@ class EditScreenModel(
             serverDao.getServerUnitById(currentState.serverId)
         } else null
 
-        // 1. Take the ID from the current state, or generate a new one ONLY IF it is not there
         val targetServerId = currentState.serverId.takeIf { it.isNotBlank() }
-            ?: "server_${kotlin.random.Random.nextInt(10000)}"
+            ?: "server_${Random.nextInt(10000)}"
 
         val targetServerUnit = if (existingServer != null) {
             existingServer.copy(
@@ -532,7 +602,8 @@ class EditScreenModel(
         val existingStates = serverDao.getServerStatesForServer(targetServerUnit.serverId).first()
         val existingStateMap = existingStates.associateBy { it.configId }
 
-        val currentUsersList = mutableListOf<Triple<String, String, String>>() // ID, FreshLink, Email/Name
+        data class StateDraft(val id: String, val link: String, val name: String, val json: String)
+        val currentUsersList = mutableListOf<StateDraft>()
 
         when (currentState.inbound.inboundProtocol) {
             Configurations.inboundProtocol.VLESS -> {
@@ -542,24 +613,41 @@ class EditScreenModel(
                         serverIp = targetServerUnit.serverIp,
                         port = finalXrayConfig.inbounds?.firstOrNull()?.port ?: 443,
                         user = user,
-                        stream = streamSettings
+                        stream = finalStreamSettings
                     )
-                    currentUsersList.add(Triple(user.id, freshLink, user.email))
+                    val freshJson = shareLinkGenerator.generateClientJson(
+                        serverIp = targetServerUnit.serverIp,
+                        port = finalXrayConfig.inbounds?.firstOrNull()?.port ?: 443,
+                        protocol = Configurations.protocol.VLESS,
+                        vlessUser = user,
+                        stream = finalStreamSettings,
+                        tag = targetServerUnit.serverName
+                    )
+                    currentUsersList.add(StateDraft(user.id, freshLink, user.email, freshJson))
                 }
             }
             Configurations.inboundProtocol.SHADOWSOCKS -> {
                 val settings = XrayConfigBuilder.jsonFormatter.decodeFromJsonElement<XrayConfig.ShadowsocksInboundSettings>(inboundSettingsJson)
                 // Use global settings as a user for link generation
+                val globalUser = XrayConfig.ShadowsocksUser(
+                    password = settings.password,
+                    method = settings.method,
+                    email = settings.email
+                )
                 val globalFreshLink = shareLinkGenerator.generateShadowsocksLink(
                     serverIp = targetServerUnit.serverIp,
                     port = finalXrayConfig.inbounds?.firstOrNull()?.port ?: 443,
-                    user = XrayConfig.ShadowsocksUser(
-                        password = settings.password,
-                        method = settings.method,
-                        email = settings.email
-                    )
+                    user = globalUser
                 )
-                currentUsersList.add(Triple("global_${targetServerUnit.serverId}", globalFreshLink, settings.email))
+                val globalFreshJson = shareLinkGenerator.generateClientJson(
+                    serverIp = targetServerUnit.serverIp,
+                    port = finalXrayConfig.inbounds?.firstOrNull()?.port ?: 443,
+                    protocol = Configurations.protocol.SHADOWSOCKS,
+                    ssUser = globalUser,
+                    stream = finalStreamSettings,
+                    tag = targetServerUnit.serverName
+                )
+                currentUsersList.add(StateDraft("global_${targetServerUnit.serverId}", globalFreshLink, settings.email, globalFreshJson))
 
                 // Multi-users reconciliation
                 settings.users.forEachIndexed { index, user ->
@@ -568,33 +656,41 @@ class EditScreenModel(
                         port = finalXrayConfig.inbounds?.firstOrNull()?.port ?: 443,
                         user = user
                     )
-                    // Use index-based ID for Shadowsocks users if they don't have unique IDs
-                    currentUsersList.add(Triple("user_${index}_${targetServerUnit.serverId}", freshLink, user.email))
+                    val freshJson = shareLinkGenerator.generateClientJson(
+                        serverIp = targetServerUnit.serverIp,
+                        port = finalXrayConfig.inbounds?.firstOrNull()?.port ?: 443,
+                        protocol = Configurations.protocol.SHADOWSOCKS,
+                        ssUser = user,
+                        stream = finalStreamSettings,
+                        tag = targetServerUnit.serverName
+                    )
+                    currentUsersList.add(StateDraft("user_${index}_${targetServerUnit.serverId}", freshLink, user.email, freshJson))
                 }
             }
         }
 
-        val currentIds = currentUsersList.map { it.first }.toSet()
+        val currentIds = currentUsersList.map { it.id }.toSet()
 
-        currentUsersList.forEach { (id, freshLink, name) ->
-            if (existingStateMap.containsKey(id)) {
-                val stateToUpdate = existingStateMap[id]!!
-                if (stateToUpdate.sharedLink != freshLink || stateToUpdate.connectionName != name || stateToUpdate.serverAddress != targetServerUnit.serverIp) {
+        currentUsersList.forEach { draft ->
+            if (existingStateMap.containsKey(draft.id)) {
+                val stateToUpdate = existingStateMap[draft.id]!!
+                if (stateToUpdate.sharedLink != draft.link || stateToUpdate.connectionName != draft.name || stateToUpdate.serverAddress != targetServerUnit.serverIp || stateToUpdate.jsonSettings != draft.json) {
                     serverDao.insertServerState(stateToUpdate.copy(
-                        sharedLink = freshLink,
-                        connectionName = name,
-                        serverAddress = targetServerUnit.serverIp
+                        sharedLink = draft.link,
+                        connectionName = draft.name,
+                        serverAddress = targetServerUnit.serverIp,
+                        jsonSettings = draft.json
                     ))
                 }
             } else {
                 val newState = ServerState(
-                    configId = id,
+                    configId = draft.id,
                     serverId = targetServerUnit.serverId,
-                    connectionName = name,
+                    connectionName = draft.name,
                     serverAddress = targetServerUnit.serverIp,
-                    sharedLink = freshLink,
+                    sharedLink = draft.link,
                     protocol = currentState.inbound.inboundProtocol.name.lowercase(),
-                    jsonSettings = ""
+                    jsonSettings = draft.json
                 )
                 serverDao.insertServerState(newState)
             }
@@ -632,5 +728,102 @@ class EditScreenModel(
         val newShortId = cypherService.generateShortId()
         realityShortIdsState.setTextAndPlaceCursorAtEnd(newShortId)
         _state.update { it.copy(stream = it.stream.copy(realityShortId = newShortId)) }
+    }
+
+
+    ///////////////////////////////////////////////
+    // Server configuration
+    ///////////////////////////////////////////////
+    fun installServer() {
+        val currentServerId = _state.value.serverId
+        if (currentServerId.isBlank()) {
+            Logger.e("EditScreenModel", "Cannot install: serverId is blank. Save first.")
+            return
+        }
+
+        val s = ServerConfiguration()
+        screenModelScope.launch {
+            try {
+                val server = serverDao.getServerUnitById(currentServerId)
+                if (server == null) {
+                    Logger.e("EditScreenModel", "Server not found in DB: $currentServerId")
+                    return@launch
+                }
+
+                val jsonConfig = server.serverJsonConfig
+                if (jsonConfig.isNullOrBlank()) {
+                    Logger.e("EditScreenModel", "No JSON configuration found in DB for $currentServerId")
+                    return@launch
+                }
+
+                s.setupConnection(
+                    serverIp = server.serverIp,
+                    serverPort = server.serverSshPort,
+                    sshUsername = server.serverSshLogin,
+                    sshPassword = server.serverSshPassword,
+                    sshPrivateKey = server.serverSshPrivateKey
+                )
+
+                val installationResult = s.runInstallation()
+                Logger.i("EditScreenModel", "Installation result: $installationResult")
+
+                val configRes = s.runConfiguration(jsonConfig)
+                Logger.i("EditScreenModel", "Configuration result: $configRes")
+
+                val startRes = s.startConfiguration()
+                Logger.i("EditScreenModel", "Start result: $startRes")
+
+                val isRunning = s.verifyInstallation()
+                Logger.i("EditScreenModel", "Is Xray running: $isRunning")
+
+            } catch (e: Exception) {
+                Logger.e("EditScreenModel", "Installation failed: ${e.message}")
+            } finally {
+                s.terminateSession()
+            }
+        }
+    }
+
+    fun restartConfiguration() {
+        val currentServerId = _state.value.serverId
+        if (currentServerId.isBlank()) {
+            Logger.e("EditScreenModel", "Cannot restart: serverId is blank. Save first.")
+            return
+        }
+
+        val s = ServerConfiguration()
+        screenModelScope.launch {
+            try {
+                val server = serverDao.getServerUnitById(currentServerId)
+                if (server == null) {
+                    Logger.e("EditScreenModel", "Server not found in DB: $currentServerId")
+                    return@launch
+                }
+                val jsonConfig = server.serverJsonConfig
+                if (jsonConfig.isNullOrBlank()) {
+                    Logger.e(
+                        "EditScreenModel",
+                        "No JSON configuration found in DB for $currentServerId"
+                    )
+                    return@launch
+                }
+                s.setupConnection(
+                    serverIp = server.serverIp,
+                    serverPort = server.serverSshPort,
+                    sshUsername = server.serverSshLogin,
+                    sshPassword = server.serverSshPassword,
+                    sshPrivateKey = server.serverSshPrivateKey
+                )
+                s.reassembleConfiguration(jsonConfig)
+                val restartRes = s.startConfiguration()
+                Logger.i("EditScreenModel", "Restart result: $restartRes")
+                val isRunning = s.verifyInstallation()
+                Logger.i("EditScreenModel", "Is Xray running: $isRunning")
+            } catch (e: Exception) {
+                Logger.e("EditScreenModel", "Restart failed: ${e.message}")
+            } finally {
+                s.terminateSession()
+            }
+        }
     }
 }

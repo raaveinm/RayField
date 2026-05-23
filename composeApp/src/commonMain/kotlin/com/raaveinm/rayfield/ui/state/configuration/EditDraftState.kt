@@ -34,6 +34,8 @@ data class InboundDraftState(
     val vmessAlterId: Int = 0,
     val trojanPassword: String? = null,
     val fallbackDest: Int = 0,
+    val isShadowsocksFallback: Boolean = false,
+    val vlessDecryption: Configurations.vlessDecryption = Configurations.vlessDecryption.NONE,
     val settings: XrayConfig.InboundSettings = XrayConfig.VlessInboundSettings(),
     val streamSettings: StreamDraftState = StreamDraftState(),
     val tag: String? = null,
@@ -49,7 +51,8 @@ data class StreamDraftState(
     val realityKeyPair: XrayKeyPair? = null,
     val realityPrivateKey: String = "",
     val realityPublicKey: String = "",
-    val realityShortId: String = ""
+    val realityShortId: String = "",
+    val fingerprint: Configurations.fingerprint = Configurations.fingerprint.CHROME
 )
 
 data class OutboundDraftState(
@@ -89,6 +92,8 @@ sealed interface EditIntent {
     data class UpdateVmessAlterId(val alterId: Int) : EditIntent
     data class UpdateTrojanPassword(val password: String) : EditIntent
     data class UpdateFallbackDest(val port: Int) : EditIntent
+    data class UpdateShadowsocksFallback(val enabled: Boolean) : EditIntent
+    data class UpdateVlessDecryption(val decryption: Configurations.vlessDecryption) : EditIntent
 
     // --- Outbound Updates ---
     data class UpdateOutboundProtocol(val protocol: Configurations.protocol) : EditIntent
