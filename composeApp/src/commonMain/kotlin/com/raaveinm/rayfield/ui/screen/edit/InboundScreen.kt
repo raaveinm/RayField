@@ -68,7 +68,7 @@ fun InboundScreen() {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             state = lazyState,
-            contentPadding = AdaptivePadding.adaptiveAll,
+            contentPadding = AdaptivePadding.adaptiveExtended,
             verticalArrangement = Arrangement.spacedBy(LocalDimensions.current.mediumPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -90,6 +90,10 @@ fun InboundScreen() {
                     )
                 }
             }
+
+            ///////////////////////////////////////////////
+            // Protocol Selector
+            ///////////////////////////////////////////////
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -139,6 +143,9 @@ fun InboundScreen() {
                 }
             }
 
+            ///////////////////////////////////////////////
+            // Protocol Specific Configuration
+            ///////////////////////////////////////////////
             item {
                 when (state.inbound.inboundProtocol) {
                     Configurations.inboundProtocol.SHADOWSOCKS -> {
@@ -230,6 +237,9 @@ fun InboundScreen() {
                 }
             }
 
+            ///////////////////////////////////////////////
+            // Fallback Destination
+            ///////////////////////////////////////////////
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -245,12 +255,14 @@ fun InboundScreen() {
                     )
                 }
             }
+
             item {
                 HorizontalDivider(
                     modifier = Modifier.padding(vertical = 8.dp),
                     color = onSurface.copy(alpha = 0.2f)
                 )
             }
+
             item {
                 Button(
                     modifier = Modifier.fillMaxWidth().padding(top = LocalDimensions.current.mediumPadding),

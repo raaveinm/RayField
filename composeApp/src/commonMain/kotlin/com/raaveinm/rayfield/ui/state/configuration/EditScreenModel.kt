@@ -384,6 +384,18 @@ class EditScreenModel(
             }
             
             EditIntent.Save -> { screenModelScope.launch { saveServer() } }
+            EditIntent.Delete -> {
+                screenModelScope.launch {
+                    val currentId = _state.value.serverId
+                    if (currentId.isNotBlank()) {
+                        val server = serverDao.getServerUnitById(currentId)
+                        if (server != null) {
+                            serverDao.deleteServerUnit(server)
+                            _state.update { it.copy(isSaved = true) }
+                        }
+                    }
+                }
+            }
             EditIntent.Cancel -> { /* Handle cancel */ }
         }
     }

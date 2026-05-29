@@ -38,7 +38,7 @@ fun Screen.OutboundScreen() {
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = AdaptivePadding.adaptiveAll,
+            contentPadding = AdaptivePadding.adaptiveExtended,
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

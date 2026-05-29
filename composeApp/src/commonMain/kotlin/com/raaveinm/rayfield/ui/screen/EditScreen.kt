@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,7 +24,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -113,62 +111,54 @@ data class EditScreen (
                 TabNavigator(tabs.first()) { tabNavigator ->
                     Box(
                         modifier = Modifier
-//                            .padding(AdaptivePadding.adaptiveCompact)
-                            .clip(RoundedCornerShape(24.dp))
-                            .shadow(8.dp)
+                            .fillMaxSize()
                             .blurredBackground(
                                 blurHolder = globalBlurHolder,
                                 blurRadius = 48.dp,
                                 tileMode = TileMode.Mirror
                             )
-                            .background(surfaceVariant),
+                            .background(surfaceVariant)
+                            .blurredContent(localBlurHolder),
+                        contentAlignment = Alignment.Center
+                    ) { AnimatedTabTransition(tabNavigator) }
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = dimen.eSmallMargin)
+                            .clip(CircleShape)
+                            .zIndex(1f)
+                            .blurredBackground(
+                                blurHolder = localBlurHolder,
+                                blurRadius = 8.dp,
+                                tileMode = TileMode.Mirror
+                            )
+                            .background(onInvertSurface)
+                            .horizontalScroll(scrollState),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .blurredContent(localBlurHolder),
-                            contentAlignment = Alignment.Center
-                        ) { AnimatedTabTransition(tabNavigator) }
-                        Row(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(bottom = dimen.eSmallMargin)
-                                .clip(CircleShape)
-                                .zIndex(1f)
-                                .blurredBackground(
-                                    blurHolder = localBlurHolder,
-                                    blurRadius = 8.dp,
-                                    tileMode = TileMode.Mirror
+                        tabs.forEach { tab ->
+                            val isSelected = tabNavigator.current == tab
+                            Box(
+                                modifier = Modifier
+                                    .height(48.dp)
+                                    .clickable { tabNavigator.current = tab }
+                                    .padding(horizontal = dimen.mediumPadding),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = tab.options.title,
+                                    color = if (isSelected) primary else onSurface
                                 )
-                                .background(onInvertSurface)
-                                .horizontalScroll(scrollState),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            tabs.forEach { tab ->
-                                val isSelected = tabNavigator.current == tab
-                                Box(
-                                    modifier = Modifier
-                                        .height(48.dp)
-                                        .clickable { tabNavigator.current = tab }
-                                        .padding(horizontal = dimen.mediumPadding),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = tab.options.title,
-                                        color = if (isSelected) primary else onSurface
+                                if (isSelected) {
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.BottomCenter)
+                                            .padding(bottom = 2.dp)
+                                            .height(3.dp)
+                                            .width(28.dp)
+                                            .clip(CircleShape)
+                                            .background(primary)
                                     )
-
-                                    if (isSelected) {
-                                        Box(
-                                            modifier = Modifier
-                                                .align(Alignment.BottomCenter)
-                                                .padding(bottom = 2.dp)
-                                                .height(3.dp)
-                                                .width(28.dp)
-                                                .clip(CircleShape)
-                                                .background(primary)
-                                        )
-                                    }
                                 }
                             }
                         }

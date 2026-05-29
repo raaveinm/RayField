@@ -16,15 +16,20 @@ class RawSshScreenModel(
 ) : ScreenModel {
     val history = mutableStateListOf<ConsoleMessage>()
 
+    lateinit var host: String
+    var port: Int = 22
+    lateinit var username: String
+    var password: String? = null
+
     fun connect(server: ServerUnit?) {
         if (server == null) {
             history.add(ConsoleMessage("server is null", ConsoleMessageType.ERROR))
             return
         }
-        val host = server.serverIp
-        val port = server.serverSshPort
-        val username = server.serverSshLogin
-        val password = server.serverSshPassword
+        host = server.serverIp
+        port = server.serverSshPort
+        username = server.serverSshLogin
+        password = server.serverSshPassword
         val privateKey = server.serverSshPrivateKey?.toByteArray()
 
         screenModelScope.launch(Dispatchers.IO) {
@@ -33,14 +38,14 @@ class RawSshScreenModel(
                 if (connected) {
                     history.add(
                         ConsoleMessage(
-                            "Connected to $host:$port as $username",
+                            "-- system --> Connected to $username@$host:$port",
                             ConsoleMessageType.OUTPUT
                         )
                     )
                 } else {
                     history.add(
                         ConsoleMessage(
-                            "Failed to connect to $host:$port as $username",
+                            "-- system --> Failed to connect to $host:$port as $username",
                             ConsoleMessageType.ERROR
                         )
                     )
@@ -50,14 +55,14 @@ class RawSshScreenModel(
     }
 
     fun executeCommand(command: String){
-        history.add(ConsoleMessage(command, ConsoleMessageType.COMMAND))
+        history.add(ConsoleMessage("-- $username --> $command", ConsoleMessageType.COMMAND))
         screenModelScope.launch(Dispatchers.IO) {
             val result = sshClient.execute(command)
             withContext(Dispatchers.Main) {
                 if (result.stdout.isNotBlank())
-                    history.add(ConsoleMessage(result.stdout, ConsoleMessageType.OUTPUT))
+                    history.add(ConsoleMessage("-- $host --> ${ result.stdout}", ConsoleMessageType.OUTPUT))
                 if (!result.error.isNullOrBlank() || result.exitCode != 0)
-                    result.error?.let { history.add(ConsoleMessage(it, ConsoleMessageType.ERROR)) }
+                    result.error?.let { history.add(ConsoleMessage("-- $host --> $it", ConsoleMessageType.ERROR)) }
             }
         }
     }

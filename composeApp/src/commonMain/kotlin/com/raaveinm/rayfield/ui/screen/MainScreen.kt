@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -20,10 +21,11 @@ import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import com.raaveinm.rayfield.ui.adapters.AdaptivePadding.adaptiveCompact
 import com.raaveinm.rayfield.ui.fragments.ConnectionInfoCard
-import com.raaveinm.rayfield.ui.mock.mockList
+import com.raaveinm.rayfield.ui.navigation.AddServerTab
 import com.raaveinm.rayfield.ui.navigation.EditTab
 import com.raaveinm.rayfield.ui.state.MainScreenModel
 import com.raaveinm.rayfield.ui.theme.LocalDimensions
+import kotlinx.coroutines.delay
 
 class MainScreen : Screen {
 
@@ -31,13 +33,19 @@ class MainScreen : Screen {
     override fun Content() {
         val screenModel = koinScreenModel<MainScreenModel>()
         val serverStates by screenModel.serverStates.collectAsState()
-        val mockList = mockList
 
         val clipboardManager = LocalClipboardManager.current
         val navigator = LocalTabNavigator.current
         val state = rememberLazyGridState()
         val dimen = LocalDimensions.current
         val mediumPadding = dimen.mediumPadding // 16.dp
+
+        LaunchedEffect(serverStates.isEmpty()) {
+            if (serverStates.isEmpty()) {
+                delay(300)
+                navigator.current = AddServerTab
+            }
+        }
 
         Column(modifier = Modifier.fillMaxSize()) {
             LazyVerticalGrid(

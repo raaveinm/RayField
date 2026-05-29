@@ -1,6 +1,9 @@
 package com.raaveinm.rayfield.ui.fragments.configurations
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +19,8 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.ExpandLess
+import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
@@ -65,13 +70,18 @@ fun VlessSettings(
     val uriHandler = LocalUriHandler.current
 
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().animateContentSize(
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioNoBouncy,
+                stiffness = Spring.StiffnessMedium
+            )
+        ),
         verticalArrangement = Arrangement.spacedBy(LocalDimensions.current.mediumPadding),
     ) {
         users.forEachIndexed { index, user ->
-            val customTextFieldState = rememberTextFieldState()
-            var isVisible by remember { mutableStateOf(true) }
             key(user.id) {
+                val customTextFieldState = rememberTextFieldState()
+                var isVisible by remember { mutableStateOf(true) }
                 val userEmailState = rememberTextFieldState(user.email)
 
                 // Sync from TextFieldState to Model
@@ -101,17 +111,21 @@ fun VlessSettings(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(LocalDimensions.current.smallPadding)
                 ) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = LocalDimensions.current.smallPadding),
-                        color = onSurface.copy(alpha = 0.2f)
-                    )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(LocalDimensions.current.mediumPadding),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        AnyImage(
+                            picture = state.configIcons[user.id],
+                            name = user.email.ifEmpty { "User" },
+                            size = 48.dp,
+                            textBackground = MaterialTheme.colorScheme.secondaryContainer,
+                            text = MaterialTheme.colorScheme.onSecondaryContainer,
+                            shape = RoundedCornerShape(4.dp)
+                        )
                         Text(
-                            text = "User ${index + 1}",
+                            text = user.email.ifEmpty { "User $index" },
                             color = onSurface,
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.weight(1f)
@@ -199,89 +213,114 @@ fun VlessSettings(
                             }
                         )
                     }
-                    
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(LocalDimensions.current.mediumPadding),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        AnimatedVisibility(isVisible) {
-                            ImagePicker(
-//                                modifier = Modifier.weight(1f),
-                                onImageSelected = { anyImage ->
-                                    editScreenModel.processIntent(
-                                        EditIntent.SetIconUserConfig(
-                                            user.id,
-                                            anyImage
-                                        )
-                                    )
-                                },
-                                onCustomSelected = {
-                                    isVisible = false
-                                    editScreenModel.processIntent(
-                                        EditIntent.SetIconUserConfig(
-                                            user.id,
-                                            null
-                                        )
-                                    )
-                                }
+
+                    ///////////////////////////////////////////////
+                    // User Icon
+                    ///////////////////////////////////////////////
+                    var isExpanded by remember { mutableStateOf(false) }
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Icon",
+                            modifier = Modifier.align(Alignment.CenterVertically),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier.weight(1f).padding(horizontal = LocalDimensions.current.smallMargin),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                        )
+                        IconButton(
+                            onClick = { isExpanded = !isExpanded },
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )  {
+                            Icon(
+                                imageVector = if (isExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                                contentDescription = "Expand",
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.64f)
                             )
                         }
-                        AnimatedVisibility(!isVisible) {
-                            Row(
-                                Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(LocalDimensions.current.mediumPadding),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                AnyImage(
-                                    picture = state.configIcons[user.id],
-                                    name = user.email.ifEmpty { "User" },
-                                    size = 96.dp,
-                                    textBackground = MaterialTheme.colorScheme.secondaryContainer,
-                                    text = MaterialTheme.colorScheme.onSecondaryContainer,
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                                SettingOutlinedText(
-                                    state = customTextFieldState,
-                                    modifier = Modifier.weight(1f),
-                                    label = { Text("User Icon") },
-                                    isDone = true,
-                                    keyboardType = KeyboardType.Uri,
-                                    trailingIcon = {
-                                        IconButton(onClick = { isVisible = true }) {
-                                            Icon(
-                                                imageVector = Icons.Outlined.Delete,
-                                                contentDescription = "delete_icon",
-                                                tint = onSurface
+                    }
+
+                    AnimatedVisibility(isExpanded) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(LocalDimensions.current.mediumPadding),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            AnimatedVisibility(isVisible) {
+                                ImagePicker(
+                                    onImageSelected = { anyImage ->
+                                        editScreenModel.processIntent(
+                                            EditIntent.SetIconUserConfig(
+                                                user.id,
+                                                anyImage
                                             )
-                                        }
+                                        )
+                                    },
+                                    onCustomSelected = {
+                                        isVisible = false
+                                        editScreenModel.processIntent(
+                                            EditIntent.SetIconUserConfig(
+                                                user.id,
+                                                null
+                                            )
+                                        )
                                     }
                                 )
-                                IconButton(onClick = {
-                                    editScreenModel.processIntent(
-                                        EditIntent.SetIconUserConfig(
-                                            user.id,
-                                            customTextFieldState.text.toString()
+                            }
+                            AnimatedVisibility(!isVisible) {
+                                Row(
+                                    Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(LocalDimensions.current.mediumPadding),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    AnyImage(
+                                        picture = state.configIcons[user.id],
+                                        name = user.email.ifEmpty { "User" },
+                                        size = 96.dp,
+                                        textBackground = MaterialTheme.colorScheme.secondaryContainer,
+                                        text = MaterialTheme.colorScheme.onSecondaryContainer,
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
+                                    SettingOutlinedText(
+                                        state = customTextFieldState,
+                                        modifier = Modifier.weight(1f),
+                                        label = { Text("User Icon") },
+                                        isDone = true,
+                                        keyboardType = KeyboardType.Uri,
+                                        trailingIcon = {
+                                            IconButton(onClick = { isVisible = true }) {
+                                                Icon(
+                                                    imageVector = Icons.Outlined.Delete,
+                                                    contentDescription = "delete_icon",
+                                                    tint = onSurface
+                                                )
+                                            }
+                                        }
+                                    )
+                                    IconButton(onClick = {
+                                        editScreenModel.processIntent(
+                                            EditIntent.SetIconUserConfig(
+                                                user.id,
+                                                customTextFieldState.text.toString()
+                                            )
                                         )
-                                    )
-                                }) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Save,
-                                        modifier = Modifier.size(64.dp),
-                                        contentDescription = "save_icon",
-                                        tint = onSurface
-                                    )
+                                    }) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.Save,
+                                            modifier = Modifier.size(64.dp),
+                                            contentDescription = "save_icon",
+                                            tint = onSurface
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                     
-                    if (index == users.lastIndex) {
-                        HorizontalDivider(
-                            modifier = Modifier.padding(vertical = LocalDimensions.current.smallPadding),
-                            color = onSurface.copy(alpha = 0.2f)
-                        )
-                    }
+                    HorizontalDivider(
+                        modifier = Modifier.padding(top = LocalDimensions.current.smallPadding),
+                        color = onSurface.copy(alpha = 0.2f)
+                    )
                 }
             }
         }

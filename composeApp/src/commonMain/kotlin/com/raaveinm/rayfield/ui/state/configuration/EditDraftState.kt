@@ -81,6 +81,7 @@ sealed interface EditIntent {
     data class SetIconServer(val icon: String?) : EditIntent
     data class SetIconUserConfig(val id: String, val icon: String?) : EditIntent
     object Save : EditIntent
+    object Delete : EditIntent
     object Cancel : EditIntent
 
     // --- Inbound Updates ---

@@ -45,4 +45,25 @@ object AdaptivePadding{
                 )
             }
         }
+
+    val adaptiveExtended: PaddingValues
+    @Composable
+    get() {
+        val dimen = LocalDimensions.current
+        val windowSize = LocalWindowSize.current
+        return when (windowSize) {
+            WindowSize.EXPANDED -> PaddingValues(
+                vertical = dimen.mediumMargin,
+                horizontal = dimen.sMediumMargin
+            )
+            WindowSize.COMPACT -> PaddingValues(
+                vertical = dimen.mediumMargin,
+                horizontal = dimen.sMediumPadding,
+            )
+            WindowSize.MEDIUM -> PaddingValues(
+                vertical = dimen.mediumMargin,
+                horizontal = dimen.extraSmallMargin,
+            )
+        }
+    }
 }

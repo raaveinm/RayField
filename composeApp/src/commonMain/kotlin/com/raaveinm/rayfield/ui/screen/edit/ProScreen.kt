@@ -9,7 +9,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.core.screen.Screen
 import com.raaveinm.rayfield.data.xray.Configurations
 import com.raaveinm.rayfield.ui.adapters.AdaptivePadding
 import com.raaveinm.rayfield.ui.fragments.BlurredDropDown
@@ -22,7 +21,7 @@ import io.github.neilyich.glassmorphism.blurredBackground
 import io.github.neilyich.glassmorphism.rememberBlurHolder
 
 @Composable
-fun Screen.ProScreen() {
+fun ProScreen() {
     val globalBlurHolder = GlobalBlurHolder.current ?: rememberBlurHolder()
     val lazyState = rememberLazyListState()
     val editScreenModel = LocalSharedEditModel.current
@@ -39,7 +38,7 @@ fun Screen.ProScreen() {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             state = lazyState,
-            contentPadding = AdaptivePadding.adaptiveAll,
+            contentPadding = AdaptivePadding.adaptiveExtended,
             verticalArrangement = Arrangement.spacedBy(LocalDimensions.current.mediumPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

@@ -1,6 +1,7 @@
 package com.raaveinm.rayfield.ui.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,6 +32,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -62,6 +65,7 @@ data class RawSshScreen(val serverId: String? = null) : Screen {
         val globalBlurHolder = GlobalBlurHolder.current ?: rememberBlurHolder()
         val navigator = LocalNavigator.currentOrThrow
         val dimen = LocalDimensions.current
+        val clipboardManager = LocalClipboardManager.current
 
         val surfaceVariant = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.84f)
         val onInvertSurface = MaterialTheme.colorScheme.surface.copy(alpha = .84f)
@@ -86,7 +90,7 @@ data class RawSshScreen(val serverId: String? = null) : Screen {
             Column (
                 modifier = Modifier
                     .padding(adaptiveAll)
-                    .clip(RoundedCornerShape(24.dp))
+                    .clip(RoundedCornerShape(8.dp))
                     .shadow(8.dp)
                     .blurredBackground(
                         blurHolder = globalBlurHolder,
@@ -114,7 +118,9 @@ data class RawSshScreen(val serverId: String? = null) : Screen {
                                 ConsoleMessageType.ERROR -> MaterialTheme.colorScheme.error
                                 ConsoleMessageType.SYSTEM -> MaterialTheme.colorScheme.onSurfaceVariant
                             },
-                            modifier = Modifier.padding(horizontal = dimen.smallPadding),
+                            modifier = Modifier
+                                .padding(horizontal = dimen.smallPadding)
+                                .clickable{ clipboardManager.setText(AnnotatedString(message.content)) },
                             fontFamily = FontFamily.Monospace
                         )
                     }

@@ -42,6 +42,7 @@ val flags = listOf(
     "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1808500/1763664f3ea80080867eafa751685b7feec950c8/ss_1763664f3ea80080867eafa751685b7feec950c8.1920x1080.jpg",
     "https://t10pgalleryv2.azureedge.net/galleryv2images/a69510f0-4fe7-4ba6-8faa-87fe0a5904b5/20cdfc7f-6d93-41ca-bd31-3b1b67e0955f/2",
     "https://cdn.forza.net/strapi-uploads/assets/xlarge_Forza_Horizon6_Pre_Order_01_City_Night_Race_16x9_f581404a18.webp",
+    "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2086160/ss_6c7370d7fa25d8c25f7c2c2e722c667e945f8b69.1920x1080.jpg?t=1658243198",
     null
 )
 
