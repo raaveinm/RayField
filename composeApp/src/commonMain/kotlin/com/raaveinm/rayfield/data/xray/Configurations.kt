@@ -182,8 +182,7 @@ object Configurations {
     @Serializable
     enum class vlessFlow{
         @SerialName("none") NONE,
-        @SerialName("xtls-rprx-vision") XTLS_RPRX_VISION,
-        @SerialName("xtls-rprx-vision-udp") XTLS_RPRX_VISION_UDP,
+        @SerialName("xtls-rprx-vision") XTLS_RPRX_VISION
     }
 
     @Serializable

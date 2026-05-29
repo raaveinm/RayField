@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,8 +28,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import com.raaveinm.rayfield.ui.adapters.AdaptivePadding
+import com.raaveinm.rayfield.ui.adapters.AnyImage
 import com.raaveinm.rayfield.ui.adapters.IpAutoFormatTransformation
 import com.raaveinm.rayfield.ui.fragments.ConnectedButtonGroup
+import com.raaveinm.rayfield.ui.fragments.ImagePicker
 import com.raaveinm.rayfield.ui.fragments.edit.SettingOutlinedText
 import com.raaveinm.rayfield.ui.screen.LocalSharedEditModel
 import com.raaveinm.rayfield.ui.state.GlobalBlurHolder
@@ -40,7 +44,7 @@ import io.github.neilyich.glassmorphism.rememberBlurHolder
 //
 
 @Composable
-fun Screen.SshScreen(serverId: String? = null) {
+fun Screen.SshScreen() {
     val editScreenModel = LocalSharedEditModel.current
     val state by editScreenModel.state.collectAsState()
 
@@ -155,18 +159,38 @@ fun Screen.SshScreen(serverId: String? = null) {
                 }
 
                 item {
-                    androidx.compose.material3.HorizontalDivider(
+                    HorizontalDivider(
                         modifier = Modifier.padding(vertical = 8.dp),
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
                     )
                 }
+
+                item {
+                    ImagePicker(
+                        onImageSelected = { anyImage ->
+                            editScreenModel.processIntent(EditIntent.SetIconServer(anyImage))
+                        },
+                        onCustomSelected = {
+                            editScreenModel.processIntent(EditIntent.SetIconServer(null))
+                        }
+                    )
+                    // Preview
+                    AnyImage(
+                        picture = state.serverIcon,
+                        name = state.connectionName.ifEmpty { "Server" },
+                        size = 128.dp,
+                        textBackground = MaterialTheme.colorScheme.primaryContainer,
+                        text = MaterialTheme.colorScheme.onPrimaryContainer,
+                        shape = RoundedCornerShape(24.dp),
+                        modifier = Modifier.padding(top = 16.dp)
+                    )
+                }
+
                 item {
                     Button(
                         modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
                         onClick = { editScreenModel.processIntent(EditIntent.Save) }
-                    ) {
-                        Text("Save Server Configuration")
-                    }
+                    ) { Text("Save Server Configuration") }
                 }
             }
         }

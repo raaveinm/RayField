@@ -36,7 +36,6 @@ import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.TabNavigator
-import com.raaveinm.rayfield.ui.adapters.AdaptivePadding.adaptiveAll
 import com.raaveinm.rayfield.ui.animations.AnimatedTabTransition
 import com.raaveinm.rayfield.ui.fragments.DisplayGrid
 import com.raaveinm.rayfield.ui.navigation.InboundTab
@@ -114,7 +113,7 @@ data class EditScreen (
                 TabNavigator(tabs.first()) { tabNavigator ->
                     Box(
                         modifier = Modifier
-                            .padding(adaptiveAll)
+//                            .padding(AdaptivePadding.adaptiveCompact)
                             .clip(RoundedCornerShape(24.dp))
                             .shadow(8.dp)
                             .blurredBackground(
@@ -133,7 +132,7 @@ data class EditScreen (
                         Row(
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
-                                .padding(bottom = dimen.mediumPadding)
+                                .padding(bottom = dimen.eSmallMargin)
                                 .clip(CircleShape)
                                 .zIndex(1f)
                                 .blurredBackground(

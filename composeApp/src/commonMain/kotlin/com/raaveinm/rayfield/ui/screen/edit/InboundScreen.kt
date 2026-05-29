@@ -130,12 +130,7 @@ fun InboundScreen() {
                     )
                 }
             }
-            item {
-                HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 8.dp),
-                    color = onSurface.copy(alpha = 0.2f)
-                )
-            }
+
             item {
                 if (state.inbound.inboundProtocol == Configurations.inboundProtocol.SHADOWSOCKS && 
                     state.stream.security != Configurations.security.NONE) {

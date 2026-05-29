@@ -92,16 +92,13 @@ class ServerConfiguration {
 
     suspend fun reassembleConfiguration(json: String) : CommandResult {
         val command = """
-            |# 1. Forcefully kill and remove the old container to prevent naming conflicts
             |${sudo("docker stop xray || true")}
             |${sudo("docker rm xray || true")}
             |
-            |# 2. Write the new JSON config to the user's home directory (avoids sudo stdin clashes)
             |cat << 'EOF' > ~/xray-docker/config.json
             |$json
             |EOF
             |
-            |# 3. Move the configuration file to the protected directory
             |${sudo("mv ~/xray-docker/config.json /etc/xray/config.json")}
         """.trimMargin()
 

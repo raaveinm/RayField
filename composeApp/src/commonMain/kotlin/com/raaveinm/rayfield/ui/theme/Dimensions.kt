@@ -17,6 +17,7 @@ data class Dimensions(
 
     val extraSmallMargin: Dp = 48.dp,
     val smallMargin: Dp = 72.dp,
+    val eSmallMargin: Dp = 128.dp,
     val sMediumMargin: Dp = 160.dp,
     val mediumMargin: Dp = 256.dp,
     val largeMargin: Dp = 512.dp

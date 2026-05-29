@@ -13,6 +13,8 @@ data class EditDraftState (
     val connectionName: String = "",
     val serverId: String = "",
     val serverAddress: String = "",
+    val serverIcon: String? = null,
+    val configIcons: Map<String, String?> = emptyMap(),
     val inbound: InboundDraftState = InboundDraftState(),
     val stream: StreamDraftState = StreamDraftState(),
     val outbound: OutboundDraftState = OutboundDraftState(),
@@ -76,6 +78,8 @@ data class ProDraftState(
 
 sealed interface EditIntent {
     data class UpdateName(val name: String) : EditIntent
+    data class SetIconServer(val icon: String?) : EditIntent
+    data class SetIconUserConfig(val id: String, val icon: String?) : EditIntent
     object Save : EditIntent
     object Cancel : EditIntent
 

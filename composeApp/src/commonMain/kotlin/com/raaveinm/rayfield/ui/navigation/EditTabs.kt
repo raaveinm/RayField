@@ -25,7 +25,7 @@ data class SshTab(
         @Composable get() = TabOptions(index = 0u, title = "SSH")
     @Composable
     override fun Content() {
-        SshScreen(serverId)
+        SshScreen()
     }
 }
 

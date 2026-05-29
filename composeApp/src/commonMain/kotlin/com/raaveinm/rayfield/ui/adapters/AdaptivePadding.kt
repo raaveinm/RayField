@@ -31,19 +31,18 @@ object AdaptivePadding{
         get() {
             val dimen = LocalDimensions.current
             val windowSize = LocalWindowSize.current
-            return PaddingValues(
-                top = dimen.sMediumMargin,
-                bottom = dimen.sMediumMargin,
-                start = when (windowSize) {
-                    WindowSize.EXPANDED -> dimen.sMediumMargin
-                    WindowSize.MEDIUM -> dimen.extraSmallMargin
-                    else -> dimen.mediumPadding
-                },
-                end = when (windowSize) {
-                    WindowSize.EXPANDED -> dimen.sMediumMargin
-                    WindowSize.MEDIUM -> dimen.extraSmallMargin
-                    else -> dimen.mediumPadding
-                }
-            )
+            return when (windowSize) {
+                WindowSize.EXPANDED -> PaddingValues(
+                    all = dimen.sMediumMargin
+                )
+                WindowSize.COMPACT -> PaddingValues(
+                    vertical = dimen.smallSize,
+                    horizontal = dimen.sMediumPadding,
+                )
+                WindowSize.MEDIUM -> PaddingValues(
+                    vertical = dimen.smallMargin,
+                    horizontal = dimen.extraSmallMargin,
+                )
+            }
         }
 }

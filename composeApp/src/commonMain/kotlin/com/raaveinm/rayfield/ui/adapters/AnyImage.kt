@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -35,10 +36,12 @@ fun AnyImage(
     size: Dp,
     textBackground: Color,
     text: Color,
+    modifier: Modifier = Modifier,
+    shape: Shape = CircleShape,
 ) {
-    val commonModifier = Modifier
+    val commonModifier = modifier
         .size(size)
-        .clip(CircleShape)
+        .clip(shape)
 
     when {
         picture == null -> AnyImagePlaceholder(name, commonModifier, textBackground, text)
@@ -96,6 +99,8 @@ private fun getDrawableByName(name: String): DrawableResource? {
         "flag_uk" -> Res.drawable.flag_uk
         "flag_ukraine" -> Res.drawable.flag_ukraine
         "flag_united_states" -> Res.drawable.flag_united_states
+        "flag_pride" -> Res.drawable.flag_pride
+        "flag_netherlands" -> Res.drawable.flag_netherlands
         else -> null
     }
 }

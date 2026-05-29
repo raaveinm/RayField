@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -11,16 +12,41 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.raaveinm.rayfield.ui.theme.LocalDimensions
 
+enum class WarningLevel {
+    ERROR,
+    WARNING,
+    NOTE
+}
+
 @Composable
 fun ErrorCard(
     text: String,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
+    level: WarningLevel = WarningLevel.ERROR
 ) {
+    val color: CardColors = when (level) {
+        WarningLevel.ERROR -> {
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.errorContainer,
+                contentColor = MaterialTheme.colorScheme.onErrorContainer
+            )
+        }
+        WarningLevel.WARNING -> {
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        }
+        WarningLevel.NOTE -> {
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                contentColor = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
     Card(
         modifier = Modifier.fillMaxWidth().padding(vertical = LocalDimensions.current.smallPadding),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer
-        )
+        colors = color
     ) {
         Text(
             text = text,

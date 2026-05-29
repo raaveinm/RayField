@@ -97,6 +97,9 @@ class EditScreenModel(
             val s = _state.value
             connectionNameState.setTextAndPlaceCursorAtEnd(s.connectionName)
             serverAddressState.setTextAndPlaceCursorAtEnd(s.serverAddress)
+
+            _state.update { it.copy(serverIcon = s.serverIcon) }
+            
             portState.setTextAndPlaceCursorAtEnd(s.inbound.inboundPort.toString())
             listenState.setTextAndPlaceCursorAtEnd(s.inbound.inboundListen)
             shadowsocksPasswordState.setTextAndPlaceCursorAtEnd(s.inbound.shadowsocksPassword ?: "")
@@ -169,6 +172,10 @@ class EditScreenModel(
             sshLoginState.setTextAndPlaceCursorAtEnd(server.serverSshLogin)
             sshPasswordState.setTextAndPlaceCursorAtEnd(server.serverSshPassword ?: "")
             sshPathToPkeyState.setTextAndPlaceCursorAtEnd(server.serverSshPrivateKey ?: "")
+
+            val states = serverDao.getServerStatesForServer(initialServerId).first()
+            val icons = states.associate { it.configId to it.iconLocation }
+            _state.update { it.copy(serverIcon = server.iconLocation, configIcons = icons) }
 
             val jsonConfig = server.serverJsonConfig
             if (!jsonConfig.isNullOrBlank()) {
@@ -293,6 +300,10 @@ class EditScreenModel(
     fun processIntent(intent: EditIntent) {
         when (intent) {
             is EditIntent.UpdateName -> _state.update { it.copy(connectionName = intent.name) }
+            is EditIntent.SetIconServer -> _state.update { it.copy(serverIcon = intent.icon) }
+            is EditIntent.SetIconUserConfig -> _state.update {
+                it.copy(configIcons = it.configIcons + (intent.id to intent.icon))
+            }
             is EditIntent.UpdateInboundPort -> _state.update { it.copy(inbound = it.inbound.copy(inboundPort = intent.port)) }
             is EditIntent.UpdateInboundListen -> _state.update { it.copy(inbound = it.inbound.copy(inboundListen = intent.listen)) }
             is EditIntent.UpdateInboundProtocol -> _state.update { it.copy(inbound = it.inbound.copy(inboundProtocol = intent.protocol)) }
@@ -580,7 +591,8 @@ class EditScreenModel(
                 serverSshPassword = sshPasswordState.text.toString(),
                 serverSshPrivateKey = sshPathToPkeyState.text.toString(),
                 serverSshPort = sshPortState.text.toString().toIntOrNull() ?: existingServer.serverSshPort,
-                serverJsonConfig = jsonString
+                serverJsonConfig = jsonString,
+                iconLocation = currentState.serverIcon
             )
         } else {
             ServerUnit(
@@ -592,7 +604,7 @@ class EditScreenModel(
                 serverSshPrivateKey = sshPathToPkeyState.text.toString(),
                 serverSshPort = sshPortState.text.toString().toIntOrNull() ?: 22,
                 serverJsonConfig = jsonString,
-                iconLocation = null
+                iconLocation = currentState.serverIcon
             )
         }
 
@@ -674,12 +686,14 @@ class EditScreenModel(
         currentUsersList.forEach { draft ->
             if (existingStateMap.containsKey(draft.id)) {
                 val stateToUpdate = existingStateMap[draft.id]!!
-                if (stateToUpdate.sharedLink != draft.link || stateToUpdate.connectionName != draft.name || stateToUpdate.serverAddress != targetServerUnit.serverIp || stateToUpdate.jsonSettings != draft.json) {
+                val newIcon = currentState.configIcons[draft.id]
+                if (stateToUpdate.sharedLink != draft.link || stateToUpdate.connectionName != draft.name || stateToUpdate.serverAddress != targetServerUnit.serverIp || stateToUpdate.jsonSettings != draft.json || stateToUpdate.iconLocation != newIcon) {
                     serverDao.insertServerState(stateToUpdate.copy(
                         sharedLink = draft.link,
                         connectionName = draft.name,
                         serverAddress = targetServerUnit.serverIp,
-                        jsonSettings = draft.json
+                        jsonSettings = draft.json,
+                        iconLocation = newIcon
                     ))
                 }
             } else {
@@ -689,6 +703,7 @@ class EditScreenModel(
                     connectionName = draft.name,
                     serverAddress = targetServerUnit.serverIp,
                     sharedLink = draft.link,
+                    iconLocation = currentState.configIcons[draft.id],
                     protocol = currentState.inbound.inboundProtocol.name.lowercase(),
                     jsonSettings = draft.json
                 )
