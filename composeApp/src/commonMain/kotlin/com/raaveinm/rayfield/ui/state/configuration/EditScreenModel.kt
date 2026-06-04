@@ -81,7 +81,7 @@ class EditScreenModel(
     private val _state = MutableStateFlow(
         EditDraftState(
             serverId = initialServerId ?: "",
-            isLoading = initialServerId != null
+            isLoading = initialServerId != null || initialConfigId != null
         )
     )
     val state = _state.asStateFlow()
@@ -89,75 +89,88 @@ class EditScreenModel(
     var uuid = MutableStateFlow("")
 
     init {
-        if (initialServerId != null) {
-            populateFormFromId(initialServerId)
-        } else {
-            _state.update { it.copy(isLoading = false) }
+        when {
+            initialConfigId != null -> populateFormFromConfigId(initialConfigId)
+            initialServerId != null -> populateFormFromId(initialServerId)
+            else -> {
+                _state.update { it.copy(isLoading = false) }
 
-            val s = _state.value
-            connectionNameState.setTextAndPlaceCursorAtEnd(s.connectionName)
-            serverAddressState.setTextAndPlaceCursorAtEnd(s.serverAddress)
+                val s = _state.value
+                connectionNameState.setTextAndPlaceCursorAtEnd(s.connectionName)
+                serverAddressState.setTextAndPlaceCursorAtEnd(s.serverAddress)
 
-            _state.update { it.copy(serverIcon = s.serverIcon) }
-            
-            portState.setTextAndPlaceCursorAtEnd(s.inbound.inboundPort.toString())
-            listenState.setTextAndPlaceCursorAtEnd(s.inbound.inboundListen)
-            shadowsocksPasswordState.setTextAndPlaceCursorAtEnd(s.inbound.shadowsocksPassword ?: "")
-            shadowsocksEmailState.setTextAndPlaceCursorAtEnd(s.inbound.shadowsocksEmail)
-            vmessAlterIdState.setTextAndPlaceCursorAtEnd(s.inbound.vmessAlterId.toString())
-            trojanPasswordState.setTextAndPlaceCursorAtEnd(s.inbound.trojanPassword ?: "")
-            fallbackDestState.setTextAndPlaceCursorAtEnd(s.inbound.fallbackDest.toString())
-            val stream = s.stream
-            tlsServerNameState.setTextAndPlaceCursorAtEnd(stream.tlsSettings?.serverName ?: "")
-            realityDestState.setTextAndPlaceCursorAtEnd(stream.realitySettings?.dest ?: "")
-            realityCustomTargetState.setTextAndPlaceCursorAtEnd(stream.realitySettings?.customTarget ?: "")
-            _isCustomTarget.value = !stream.realitySettings?.customTarget.isNullOrBlank()
+                _state.update { it.copy(serverIcon = s.serverIcon) }
+                
+                portState.setTextAndPlaceCursorAtEnd(s.inbound.inboundPort.toString())
+                listenState.setTextAndPlaceCursorAtEnd(s.inbound.inboundListen)
+                shadowsocksPasswordState.setTextAndPlaceCursorAtEnd(s.inbound.shadowsocksPassword ?: "")
+                shadowsocksEmailState.setTextAndPlaceCursorAtEnd(s.inbound.shadowsocksEmail)
+                vmessAlterIdState.setTextAndPlaceCursorAtEnd(s.inbound.vmessAlterId.toString())
+                trojanPasswordState.setTextAndPlaceCursorAtEnd(s.inbound.trojanPassword ?: "")
+                fallbackDestState.setTextAndPlaceCursorAtEnd(s.inbound.fallbackDest.toString())
+                val stream = s.stream
+                tlsServerNameState.setTextAndPlaceCursorAtEnd(stream.tlsSettings?.serverName ?: "")
+                realityDestState.setTextAndPlaceCursorAtEnd(stream.realitySettings?.dest ?: "")
+                realityCustomTargetState.setTextAndPlaceCursorAtEnd(stream.realitySettings?.customTarget ?: "")
+                _isCustomTarget.value = !stream.realitySettings?.customTarget.isNullOrBlank()
 
-            realityServerNamesState.setTextAndPlaceCursorAtEnd(stream.realitySettings?.serverNames?.joinToString(", ") ?: "")
-            realityPrivateKeyState.setTextAndPlaceCursorAtEnd(stream.realitySettings?.privateKey ?: "")
-            realityPublicKeyState.setTextAndPlaceCursorAtEnd(stream.realitySettings?.password ?: "")
-            realityShortIdsState.setTextAndPlaceCursorAtEnd(stream.realitySettings?.shortIds?.joinToString(", ") ?: "")
-            xhttpPathState.setTextAndPlaceCursorAtEnd(stream.xhttpSettings?.path ?: "")
+                realityServerNamesState.setTextAndPlaceCursorAtEnd(stream.realitySettings?.serverNames?.joinToString(", ") ?: "")
+                realityPrivateKeyState.setTextAndPlaceCursorAtEnd(stream.realitySettings?.privateKey ?: "")
+                realityPublicKeyState.setTextAndPlaceCursorAtEnd(stream.realitySettings?.password ?: "")
+                realityShortIdsState.setTextAndPlaceCursorAtEnd(stream.realitySettings?.shortIds?.joinToString(", ") ?: "")
+                xhttpPathState.setTextAndPlaceCursorAtEnd(stream.xhttpSettings?.path ?: "")
 
-            // SSH initialization
-            sshPortState.setTextAndPlaceCursorAtEnd("22")
-            sshLoginState.setTextAndPlaceCursorAtEnd("root")
-            sshPasswordState.setTextAndPlaceCursorAtEnd("")
-            sshPathToPkeyState.setTextAndPlaceCursorAtEnd("")
+                // SSH initialization
+                sshPortState.setTextAndPlaceCursorAtEnd("22")
+                sshLoginState.setTextAndPlaceCursorAtEnd("root")
+                sshPasswordState.setTextAndPlaceCursorAtEnd("")
+                sshPathToPkeyState.setTextAndPlaceCursorAtEnd("")
 
-            val outbound = s.outbound
-            outboundTagState.setTextAndPlaceCursorAtEnd(outbound.tag ?: "proxy")
+                val outbound = s.outbound
+                outboundTagState.setTextAndPlaceCursorAtEnd(outbound.tag ?: "proxy")
 
-            when (outbound.protocol) {
-                Configurations.protocol.VLESS -> {
-                    val vlessSettings = outbound.settings?.let {
-                        XrayConfigBuilder.jsonFormatter.decodeFromJsonElement<XrayConfig.VlessOutboundSettings>(it)
+                when (outbound.protocol) {
+                    Configurations.protocol.VLESS -> {
+                        val vlessSettings = outbound.settings?.let {
+                            XrayConfigBuilder.jsonFormatter.decodeFromJsonElement<XrayConfig.VlessOutboundSettings>(it)
+                        }
+                        val firstVlessServer = vlessSettings?.vnext?.firstOrNull()
+                        if (firstVlessServer != null) {
+                            outboundAddressState.setTextAndPlaceCursorAtEnd(firstVlessServer.address)
+                            outboundPortState.setTextAndPlaceCursorAtEnd(firstVlessServer.port.toString())
+                            outboundIdState.setTextAndPlaceCursorAtEnd(firstVlessServer.users.firstOrNull()?.id ?: "")
+                        }
                     }
-                    val firstVlessServer = vlessSettings?.vnext?.firstOrNull()
-                    if (firstVlessServer != null) {
-                        outboundAddressState.setTextAndPlaceCursorAtEnd(firstVlessServer.address)
-                        outboundPortState.setTextAndPlaceCursorAtEnd(firstVlessServer.port.toString())
-                        outboundIdState.setTextAndPlaceCursorAtEnd(firstVlessServer.users.firstOrNull()?.id ?: "")
+                    Configurations.protocol.SHADOWSOCKS -> {
+                        val ssSettings = outbound.settings?.let {
+                            XrayConfigBuilder.jsonFormatter.decodeFromJsonElement<XrayConfig.ShadowsocksOutboundSettings>(it)
+                        }
+                        val firstSsServer = ssSettings?.servers?.firstOrNull()
+                        if (firstSsServer != null) {
+                            outboundAddressState.setTextAndPlaceCursorAtEnd(firstSsServer.address)
+                            outboundPortState.setTextAndPlaceCursorAtEnd(firstSsServer.port.toString())
+                            outboundPasswordState.setTextAndPlaceCursorAtEnd(firstSsServer.password)
+                        }
                     }
+                    else -> {}
                 }
-                Configurations.protocol.SHADOWSOCKS -> {
-                    val ssSettings = outbound.settings?.let {
-                        XrayConfigBuilder.jsonFormatter.decodeFromJsonElement<XrayConfig.ShadowsocksOutboundSettings>(it)
-                    }
-                    val firstSsServer = ssSettings?.servers?.firstOrNull()
-                    if (firstSsServer != null) {
-                        outboundAddressState.setTextAndPlaceCursorAtEnd(firstSsServer.address)
-                        outboundPortState.setTextAndPlaceCursorAtEnd(firstSsServer.port.toString())
-                        outboundPasswordState.setTextAndPlaceCursorAtEnd(firstSsServer.password)
-                    }
-                }
-                else -> {}
+
+                val pro = s.pro
+                logAccessPathState.setTextAndPlaceCursorAtEnd(pro.log.access ?: "")
+                logErrorPathState.setTextAndPlaceCursorAtEnd(pro.log.error ?: "")
+                logMaskAddressState.setTextAndPlaceCursorAtEnd(pro.log.maskAddress ?: "")
             }
+        }
+    }
 
-            val pro = s.pro
-            logAccessPathState.setTextAndPlaceCursorAtEnd(pro.log.access ?: "")
-            logErrorPathState.setTextAndPlaceCursorAtEnd(pro.log.error ?: "")
-            logMaskAddressState.setTextAndPlaceCursorAtEnd(pro.log.maskAddress ?: "")
+    private fun populateFormFromConfigId(configId: String) {
+        screenModelScope.launch {
+            val serverState = serverDao.getServerStateById(configId)
+            if (serverState != null) {
+                populateFormFromId(serverState.serverId)
+            } else {
+                _state.update { it.copy(isLoading = false) }
+            }
         }
     }
 
@@ -223,21 +236,35 @@ class EditScreenModel(
                         }
 
                         // Update local Draft State for discrete variables
-                        _state.update { it.copy(
-                            inbound = it.inbound.copy(
+                        _state.update { current ->
+                            val updatedInbound = current.inbound.copy(
                                 inboundListen = inbound.listen,
                                 inboundPort = inbound.port,
                                 inboundProtocol = inbound.protocol,
-                                settings = unpackedInboundSettings
-                            ),
-                            stream = it.stream.copy(
-                                network = stream?.network ?: Configurations.transportNetwork.TCP,
-                                security = stream?.security ?: Configurations.security.NONE,
-                                tlsSettings = stream?.tlsSettings,
-                                realitySettings = stream?.realitySettings,
-                                xhttpSettings = stream?.xhttpSettings
+                                settings = unpackedInboundSettings ?: current.inbound.settings
                             )
-                        ) }
+
+                            val finalInbound = if (unpackedInboundSettings is XrayConfig.ShadowsocksInboundSettings) {
+                                updatedInbound.copy(
+                                    shadowsocksPassword = unpackedInboundSettings.password,
+                                    shadowsocksEmail = unpackedInboundSettings.email,
+                                    shadowsocksMethod = unpackedInboundSettings.method,
+                                    shadowsocksNetwork = unpackedInboundSettings.network,
+                                    shadowsocksUsers = unpackedInboundSettings.users
+                                )
+                            } else updatedInbound
+
+                            current.copy(
+                                inbound = finalInbound,
+                                stream = current.stream.copy(
+                                    network = stream?.network ?: Configurations.transportNetwork.TCP,
+                                    security = stream?.security ?: Configurations.security.NONE,
+                                    tlsSettings = stream?.tlsSettings,
+                                    realitySettings = stream?.realitySettings,
+                                    xhttpSettings = stream?.xhttpSettings
+                                )
+                            )
+                        }
                     }
 
                     // Unpack Outbound Layer
@@ -261,6 +288,13 @@ class EditScreenModel(
                             outboundAddressState.setTextAndPlaceCursorAtEnd(serverNode?.address ?: "")
                             outboundPortState.setTextAndPlaceCursorAtEnd(serverNode?.port?.toString() ?: "443")
                             outboundPasswordState.setTextAndPlaceCursorAtEnd(serverNode?.password ?: "")
+                            
+                            // Update discrete state fields for Shadowsocks outbound
+                            _state.update { it.copy(
+                                outbound = it.outbound.copy(
+                                    shadowsocksMethod = serverNode?.method
+                                )
+                            ) }
                         }
 
                         _state.update { it.copy(
@@ -468,13 +502,15 @@ class EditScreenModel(
                     method = method,
                     password = password,
                     email = email,
-                    users = listOf(
-                        XrayConfig.ShadowsocksUser(
-                            password = password,
-                            method = method,
-                            email = email
+                    users = currentState.inbound.shadowsocksUsers.ifEmpty {
+                        listOf(
+                            XrayConfig.ShadowsocksUser(
+                                password = password,
+                                method = method,
+                                email = email
+                            )
                         )
-                    )
+                    }
                 )
             }
         }
@@ -652,43 +688,47 @@ class EditScreenModel(
             }
             Configurations.inboundProtocol.SHADOWSOCKS -> {
                 val settings = XrayConfigBuilder.jsonFormatter.decodeFromJsonElement<XrayConfig.ShadowsocksInboundSettings>(inboundSettingsJson)
-                // Use global settings as a user for link generation
-                val globalUser = XrayConfig.ShadowsocksUser(
-                    password = settings.password,
-                    method = settings.method,
-                    email = settings.email
-                )
-                val globalFreshLink = shareLinkGenerator.generateShadowsocksLink(
-                    serverIp = targetServerUnit.serverIp,
-                    port = finalXrayConfig.inbounds?.firstOrNull()?.port ?: 443,
-                    user = globalUser
-                )
-                val globalFreshJson = shareLinkGenerator.generateClientJson(
-                    serverIp = targetServerUnit.serverIp,
-                    port = finalXrayConfig.inbounds?.firstOrNull()?.port ?: 443,
-                    protocol = Configurations.protocol.SHADOWSOCKS,
-                    ssUser = globalUser,
-                    stream = finalStreamSettings,
-                    tag = targetServerUnit.serverName
-                )
-                currentUsersList.add(StateDraft("global_${targetServerUnit.serverId}", globalFreshLink, settings.email, globalFreshJson))
-
-                // Multi-users reconciliation
-                settings.users.forEachIndexed { index, user ->
-                    val freshLink = shareLinkGenerator.generateShadowsocksLink(
+                
+                // If we have explicit users, use them. Otherwise, use the global settings as the only user.
+                if (currentState.inbound.shadowsocksUsers.isEmpty()) {
+                    val globalUser = XrayConfig.ShadowsocksUser(
+                        password = settings.password,
+                        method = settings.method,
+                        email = settings.email
+                    )
+                    val globalFreshLink = shareLinkGenerator.generateShadowsocksLink(
                         serverIp = targetServerUnit.serverIp,
                         port = finalXrayConfig.inbounds?.firstOrNull()?.port ?: 443,
-                        user = user
+                        user = globalUser,
+                        stream = finalStreamSettings
                     )
-                    val freshJson = shareLinkGenerator.generateClientJson(
+                    val globalFreshJson = shareLinkGenerator.generateClientJson(
                         serverIp = targetServerUnit.serverIp,
                         port = finalXrayConfig.inbounds?.firstOrNull()?.port ?: 443,
                         protocol = Configurations.protocol.SHADOWSOCKS,
-                        ssUser = user,
+                        ssUser = globalUser,
                         stream = finalStreamSettings,
                         tag = targetServerUnit.serverName
                     )
-                    currentUsersList.add(StateDraft("user_${index}_${targetServerUnit.serverId}", freshLink, user.email, freshJson))
+                    currentUsersList.add(StateDraft("global_${targetServerUnit.serverId}", globalFreshLink, settings.email, globalFreshJson))
+                } else {
+                    settings.users.forEachIndexed { index, user ->
+                        val freshLink = shareLinkGenerator.generateShadowsocksLink(
+                            serverIp = targetServerUnit.serverIp,
+                            port = finalXrayConfig.inbounds?.firstOrNull()?.port ?: 443,
+                            user = user,
+                            stream = finalStreamSettings
+                        )
+                        val freshJson = shareLinkGenerator.generateClientJson(
+                            serverIp = targetServerUnit.serverIp,
+                            port = finalXrayConfig.inbounds?.firstOrNull()?.port ?: 443,
+                            protocol = Configurations.protocol.SHADOWSOCKS,
+                            ssUser = user,
+                            stream = finalStreamSettings,
+                            tag = targetServerUnit.serverName
+                        )
+                        currentUsersList.add(StateDraft("user_${index}_${targetServerUnit.serverId}", freshLink, user.email, freshJson))
+                    }
                 }
             }
         }

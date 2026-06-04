@@ -1,5 +1,6 @@
 package com.raaveinm.rayfield.ui.screen.edit
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -29,6 +30,7 @@ import com.raaveinm.rayfield.ui.adapters.AdaptivePadding
 import com.raaveinm.rayfield.ui.adapters.IpAutoFormatTransformation
 import com.raaveinm.rayfield.ui.fragments.BlurredDropDown
 import com.raaveinm.rayfield.ui.fragments.ErrorCard
+import com.raaveinm.rayfield.ui.fragments.WarningLevel
 import com.raaveinm.rayfield.ui.fragments.configurations.ShadowsocksConfiguration
 import com.raaveinm.rayfield.ui.fragments.configurations.VlessSettings
 import com.raaveinm.rayfield.ui.fragments.configurations.VlessStreamSettings
@@ -136,10 +138,11 @@ fun InboundScreen() {
             }
 
             item {
-                if (state.inbound.inboundProtocol == Configurations.inboundProtocol.SHADOWSOCKS && 
+                AnimatedVisibility (state.inbound.inboundProtocol == Configurations.inboundProtocol.SHADOWSOCKS &&
                     state.stream.security != Configurations.security.NONE) {
                     ErrorCard("Warning: Shadowsocks with ${state.stream.security.name} is " +
-                            "non-standard.Standard ss:// links will not work.")
+                            "non-standard.Standard ss:// links will not work.",
+                        level = WarningLevel.WARNING)
                 }
             }
 

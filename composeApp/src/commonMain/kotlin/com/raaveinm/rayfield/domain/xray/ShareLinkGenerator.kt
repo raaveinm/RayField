@@ -47,7 +47,8 @@ class ShareLinkGenerator {
     fun generateShadowsocksLink(
         serverIp: String,
         port: Int,
-        user: XrayConfig.ShadowsocksUser
+        user: XrayConfig.ShadowsocksUser,
+        stream: XrayConfig.StreamSettings
     ): String {
         val method = user.method.name.lowercase().replace("_", "-")
         val password = user.password
@@ -55,9 +56,30 @@ class ShareLinkGenerator {
         val userInfo = "$method:$password".toByteArray()
         val encodedUserInfo = Base64.getUrlEncoder().withoutPadding().encodeToString(userInfo)
 
+        val queryParams = mutableListOf<String>()
+        
+        if (stream.security == Configurations.security.REALITY) {
+            queryParams.add("type=${stream.network.name.lowercase()}")
+            queryParams.add("security=reality")
+            stream.realitySettings?.let { reality ->
+                val sni = reality.serverNames.firstOrNull() ?: ""
+                if (sni.isNotEmpty()) queryParams.add("sni=${encodeUri(sni)}")
+                queryParams.add("fp=${reality.fingerprint?.name?.lowercase() ?: "chrome"}")
+                queryParams.add("pbk=${reality.password}")
+            }
+        } else if (stream.security == Configurations.security.TLS) {
+            queryParams.add("type=${stream.network.name.lowercase()}")
+            queryParams.add("security=tls")
+            stream.tlsSettings?.let { tls ->
+                tls.serverName?.let { queryParams.add("sni=${encodeUri(it)}") }
+                tls.fingerprint?.let { queryParams.add("fp=${it.name.lowercase()}") }
+            }
+        }
+
+        val queryString = if (queryParams.isNotEmpty()) "?" + queryParams.joinToString("&") else ""
         val tag = encodeUri(user.email)
 
-        return "ss://$encodedUserInfo@$serverIp:$port#$tag"
+        return "ss://$encodedUserInfo@$serverIp:$port$queryString#$tag"
     }
 
     fun generateLink(outbound: XrayConfig.OutboundConfig): String {
@@ -127,9 +149,31 @@ class ShareLinkGenerator {
         val userInfo = "$method:$password".toByteArray()
         val encodedUserInfo = Base64.getUrlEncoder().withoutPadding().encodeToString(userInfo)
 
+        val queryParams = mutableListOf<String>()
+        val stream = outbound.streamSettings
+
+        if (stream != null && stream.security != Configurations.security.NONE) {
+            queryParams.add("type=${stream.network.name.lowercase()}")
+            queryParams.add("security=${stream.security.name.lowercase()}")
+
+            stream.realitySettings?.let { reality ->
+                val sni = reality.serverNames.firstOrNull() ?: ""
+                if (sni.isNotEmpty()) queryParams.add("sni=${encodeUri(sni)}")
+                queryParams.add("pbk=${reality.password}")
+                reality.shortIds.firstOrNull()?.let { if (it.isNotEmpty()) queryParams.add("sid=$it") }
+                reality.fingerprint?.let { queryParams.add("fp=${it.name.lowercase()}") }
+            }
+
+            stream.tlsSettings?.let { tls ->
+                tls.serverName?.let { queryParams.add("sni=${encodeUri(it)}") }
+                tls.fingerprint?.let { queryParams.add("fp=${it.name.lowercase()}") }
+            }
+        }
+
+        val queryString = if (queryParams.isNotEmpty()) "?" + queryParams.joinToString("&") else ""
         val tag = encodeUri(outbound.tag ?: "Rayfield_Shadowsocks")
 
-        return "ss://$encodedUserInfo@$address:$port#$tag"
+        return "ss://$encodedUserInfo@$address:$port$queryString#$tag"
     }
 
     fun generateClientJson(

@@ -158,8 +158,7 @@ object Configurations {
         @SerialName("aes-128-gcm") AES_128_GCM,
         @SerialName("aes-192-gcm") AES_192_GCM,
         @SerialName("aes-256-gcm") AES_256_GCM,
-        @SerialName("chacha20-poly1305") CHACHA20_POLY1305,
-        @SerialName("chacha20-ietf-poly1305") CHACHA20_POLY1305_IETF
+        @SerialName("chacha20-ietf-poly1305") CHACHA20_IETF_POLY1305
     }
 
     // VLESS
@@ -189,12 +188,11 @@ object Configurations {
     enum class vlessDecryption {
         @SerialName("none") NONE,
         @SerialName("rc4-md5") RC4_MD5,
-        @SerialName("chacha20-poly1305") CHACHA20_POLY1305,
+        @SerialName("chacha20-ietf-poly1305") CHACHA20_IETF_POLY1305,
         @SerialName("aes-128-gcm") AES_128_GCM,
         @SerialName("aes-128-ctr") AES_128_CTR,
         @SerialName("aes-192-gcm") AES_192_GCM,
-        @SerialName("aes-256-gcm") AES_256_GCM,
-        @SerialName("chacha20-ietf-poly1305") CHACHA20_POLY1305_IETF
+        @SerialName("aes-256-gcm") AES_256_GCM
     }
 
     @Serializable
