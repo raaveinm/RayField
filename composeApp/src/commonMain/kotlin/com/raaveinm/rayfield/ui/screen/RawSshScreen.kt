@@ -32,8 +32,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.TileMode
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -42,7 +40,7 @@ import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.raaveinm.rayfield.data.ssh.ConsoleMessageType
-import com.raaveinm.rayfield.domain.helpers.LocalWindowSize
+import com.raaveinm.rayfield.domain.helpers.ClipboardHelper
 import com.raaveinm.rayfield.ui.adapters.AdaptivePadding.adaptiveAll
 import com.raaveinm.rayfield.ui.fragments.DisplayGrid
 import com.raaveinm.rayfield.ui.state.GlobalBlurHolder
@@ -65,12 +63,12 @@ data class RawSshScreen(val serverId: String? = null) : Screen {
         val globalBlurHolder = GlobalBlurHolder.current ?: rememberBlurHolder()
         val navigator = LocalNavigator.currentOrThrow
         val dimen = LocalDimensions.current
-        val clipboardManager = LocalClipboardManager.current
+        val clipboardManager = ClipboardHelper
 
         val surfaceVariant = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.84f)
-        val onInvertSurface = MaterialTheme.colorScheme.surface.copy(alpha = .84f)
-        val primary = MaterialTheme.colorScheme.primary
-        val onSurface = MaterialTheme.colorScheme.onSurface
+//        val onInvertSurface = MaterialTheme.colorScheme.surface.copy(alpha = .84f)
+//        val primary = MaterialTheme.colorScheme.primary
+//        val onSurface = MaterialTheme.colorScheme.onSurface
 
         var inputText by remember { mutableStateOf("") }
         val listState = rememberLazyListState()
@@ -90,6 +88,7 @@ data class RawSshScreen(val serverId: String? = null) : Screen {
             Column (
                 modifier = Modifier
                     .padding(adaptiveAll)
+                    .padding(vertical = 128.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .shadow(8.dp)
                     .blurredBackground(
@@ -120,7 +119,7 @@ data class RawSshScreen(val serverId: String? = null) : Screen {
                             },
                             modifier = Modifier
                                 .padding(horizontal = dimen.smallPadding)
-                                .clickable{ clipboardManager.setText(AnnotatedString(message.content)) },
+                                .clickable{ clipboardManager.setText((message.content)) },
                             fontFamily = FontFamily.Monospace
                         )
                     }

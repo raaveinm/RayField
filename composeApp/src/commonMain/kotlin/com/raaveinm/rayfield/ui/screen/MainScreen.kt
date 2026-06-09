@@ -15,18 +15,18 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
+import com.raaveinm.rayfield.domain.helpers.ClipboardHelper
 import com.raaveinm.rayfield.ui.adapters.AdaptivePadding.adaptiveCompact
 import com.raaveinm.rayfield.ui.fragments.ConnectionInfoCard
 import com.raaveinm.rayfield.ui.navigation.EditTab
 import com.raaveinm.rayfield.ui.state.MainScreenModel
 import com.raaveinm.rayfield.ui.theme.LocalDimensions
-import org.jetbrains.skiko.ClipboardManager
+import kotlinx.coroutines.launch
 
 class MainScreen : Screen {
 
@@ -36,9 +36,6 @@ class MainScreen : Screen {
         val screenModel = koinScreenModel<MainScreenModel>()
         val serverStates by screenModel.serverStates.collectAsState()
 
-        val clipboardManager = LocalClipboardManager.current //
-//        val snackbarState
-        val clibBoardManager = ClipboardManager()
         val scope = rememberCoroutineScope()
         val navigator = LocalTabNavigator.current
         val state = rememberLazyGridState()
@@ -58,8 +55,8 @@ class MainScreen : Screen {
                     ConnectionInfoCard(
                         serverState = serverState,
                         modifier = Modifier.fillMaxWidth(),
-                        onCopyClick = { text -> 
-                            clipboardManager.setText(AnnotatedString(text))
+                        onCopyClick = { text ->
+                            scope.launch { ClipboardHelper.setText(text) }
                         },
                         onQrClick = { /* Handle QR */ },
                         onShareClick = { /* Handle Share */ },
